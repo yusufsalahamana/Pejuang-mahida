@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pertarungan: ASWAJA</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #006266; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* BATTLE ARENA (Hijau NU) */
+        .battle-arena { background: linear-gradient(to bottom, #009432, #006266); padding: 15px; border-bottom: 4px solid #f1c40f; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; margin-bottom: 5px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; border: 2px solid #fff; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s, background 0.3s; }
+        .player .hp-bar { background: #2ecc71; width: 100%; }
+        .monster .hp-bar { background: #e74c3c; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; text-align: center;}
+        
+        /* EFEK GETAR */
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s ease-in-out; background: #8c1414 !important; }
+
+        /* AREA SOAL */
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #f1f2f6; color: #2f3542; position: relative; }
+        .q-number { background: #009432; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 18px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .opt-btn { background: white; border: 2px solid #ced6e0; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-family: 'Nunito', sans-serif; font-weight: 700; color: #2f3542; transition: 0.1s; display: flex; align-items: center; }
+        .opt-btn:active { transform: scale(0.98); background: #dff9fb; }
+        .opt-btn.selected { border-color: #009432; background: #1dd1a1; color: white; }
+        
+        /* NAVIGASI BAWAH */
+        .nav-area { background: white; padding: 15px; display: flex; justify-content: space-between; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 10; }
+        .nav-btn { background: #57606f; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-family: 'Fredoka One', cursive; font-size: 16px; width: 48%; transition: 0.2s;}
+        .nav-btn:active { transform: translateY(2px); }
+        .nav-btn.serang { background: #009432; }
+        
+        /* MODAL HASIL */
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; text-align: center;}
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; max-width: 400px; width: 100%; }
+        .modal-title { font-family: 'Fredoka One', cursive; font-size: 24px; color: #009432; margin-bottom: 10px; }
+        .modal-score { font-size: 60px; font-weight: 900; color: #f1c40f; margin: 10px 0; }
+        .modal-btn { background: #009432; color: white; text-decoration: none; padding: 15px; border-radius: 10px; display: block; font-family: 'Fredoka One', cursive; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">👳🏻‍♂️</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Santri Aswaja</div>
+        </div>
+        <div style="font-family:'Fredoka One'; font-size:20px; color:#f1c40f;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">🦇</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Monster Bid'ah</div>
+        </div>
+    </div>
+
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">SOAL 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat pertanyaan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" id="btn-serang" onclick="serang()">JAWAB! 🟢</button>
+    </div>
+
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="m-title">ALHAMDULILLAH!</div>
+            <div style="font-size: 50px;" id="m-icon">⭐</div>
+            <div class="modal-score" id="m-score">100</div>
+            <p id="m-desc" style="font-weight:700;">Kamu menguasai amaliyah Aswaja!</p>
+            <a href="menu_pat.html" class="modal-btn">KEMBALI KE MENU 🗺️</a>
+        </div>
+    </div>
+
+    <script>
+        // Database 50 Soal ASWAJA (Ke-NU-an) PAT Kelas 6
+        const db = [
+            ["Organisasi Islam terbesar di Indonesia yang didirikan pada 31 Januari 1926 adalah...","A. Muhammadiyah","B. Nahdlatul Ulama","C. Persis","D. Al-Irsyad",1],
+            ["Tokoh pendiri Nahdlatul Ulama sekaligus pengasuh Ponpes Tebuireng Jombang adalah...","A. KH Hasyim Asy'ari","B. KH Ahmad Dahlan","C. KH Mas Mansyur","D. HOS Tjokroaminoto",0],
+            ["Arti dari kata 'Nahdlatul Ulama' adalah...","A. Persatuan Ulama","B. Pemuda Ulama","C. Kebangkitan Ulama","D. Kekuatan Ulama",2],
+            ["Lambang NU berupa bola dunia yang diikat dengan tali bersimpul sejumlah...","A. 33","B. 66","C. 9","D. 99",3],
+            ["Tali yang mengikat bola dunia pada lambang NU melambangkan...","A. Persatuan","B. Perdamaian","C. Keberanian","D. Kekuatan",0],
+            ["Jumlah bintang pada lambang NU adalah...","A. 5","B. 9","C. 17","D. 99",1],
+            ["Bintang terbesar di tengah lambang NU melambangkan...","A. Nabi Muhammad SAW","B. Malaikat Jibril","C. KH Hasyim Asy'ari","D. Wali Songo",0],
+            ["Empat bintang di atas garis khatulistiwa melambangkan...","A. Empat Malaikat","B. Empat Imam Mazhab","C. Khulafaur Rasyidin","D. Empat Kitab Suci",2],
+            ["Empat bintang di bawah garis khatulistiwa melambangkan...","A. Khulafaur Rasyidin","B. Empat Imam Mazhab","C. Empat Sifat Rasul","D. Empat Sahabat",1],
+            ["Tulisan Arab 'Nahdlatul Ulama' pada lambang dibaca dari arah...","A. Atas ke bawah","B. Kiri ke kanan","C. Tengah ke luar","D. Kanan ke kiri",3],
+            ["Warna dasar lambang NU adalah hijau yang melambangkan...","A. Kesuburan/Kedamaian","B. Keberanian","C. Kesucian","D. Kegelapan",0],
+            ["Asas keagamaan yang dianut oleh NU adalah...","A. Mu'tazilah","B. Ahlussunnah Wal Jama'ah","C. Qadariyah","D. Syi'ah",1],
+            ["Dalam bidang fiqih, penganut Aswaja NU di Indonesia mayoritas mengikuti mazhab...","A. Imam Maliki","B. Imam Hanafi","C. Imam Syafi'i","D. Imam Hambali",2],
+            ["Salah satu sikap dasar Aswaja adalah 'Tawasuth' yang berarti...","A. Moderat/Tengah-tengah","B. Keras","C. Bebas","D. Menang sendiri",0],
+            ["Sikap seimbang dalam segala hal bagi warga NU disebut...","A. Tasamuh","B. Tawazun","C. I'tidal","D. Amar Ma'ruf",1],
+            ["'Tasamuh' merupakan sikap warga NU yang artinya...","A. Saling tolong","B. Adil","C. Ikhlas","D. Toleransi",3],
+            ["Tegak lurus dan adil dalam bersikap disebut...","A. Tawasuth","B. Tawazun","C. I'tidal","D. Tasamuh",2],
+            ["Membaca kalimat thayyibah bersama-sama mendoakan orang meninggal disebut...","A. Dibaan","B. Tahlilan","C. Manaqiban","D. Barzanji",1],
+            ["Membaca doa bersama memohon pertolongan Allah saat ada musibah disebut...","A. Istighosah","B. Ruwatan","C. Tahlilan","D. Nyadran",0],
+            ["Berkunjung ke makam para wali dan keluarga untuk mendoakan mereka disebut...","A. Rekreasi","B. Silaturahmi","C. Ziarah Kubur","D. Musafahah",2],
+            ["Hukum ziarah kubur dalam pandangan NU adalah...","A. Wajib","B. Sunah","C. Haram","D. Makruh",1],
+            ["Perayaan hari kelahiran Nabi Muhammad SAW yang sering dilakukan warga NU disebut...","A. Isra Mi'raj","B. Nuzulul Qur'an","C. Idul Fitri","D. Maulid Nabi",3],
+            ["Tokoh ulama NU pencipta lambang NU adalah...","A. KH Ridwan Abdullah","B. KH Wahab Hasbullah","C. KH Bisri Syansuri","D. KH As'ad Samsul Arifin",0],
+            ["Rais Akbar pertama PBNU adalah...","A. KH Wahid Hasyim","B. KH Wahab Hasbullah","C. KH Hasyim Asy'ari","D. Gus Dur",2],
+            ["NU didirikan di kota...","A. Jombang","B. Surabaya","C. Jakarta","D. Semarang",1],
+            ["Syuriyah dalam struktur kepengurusan NU bertugas sebagai...","A. Pimpinan Tertinggi/Penasihat","B. Bendahara","C. Pelaksana Harian","D. Keamanan",0],
+            ["Tanfidziyah dalam kepengurusan NU bertugas sebagai...","A. Penasihat","B. Dewan Fatwa","C. Pelaksana/Pengurus Harian","D. Hakim",2],
+            ["Badan otonom NU untuk kalangan pemuda adalah...","A. Banser","B. GP Ansor","C. Fatayat","D. IPNU",1],
+            ["Badan otonom NU untuk kalangan perempuan muda adalah...","A. Muslimat NU","B. Pagar Nusa","C. Fatayat NU","D. ISNU",2],
+            ["Badan otonom NU untuk pelajar putra tingkat dasar/menengah adalah...","A. IPNU","B. PMII","C. GP Ansor","D. Pagar Nusa",0],
+            ["Badan otonom NU untuk pelajar putri adalah...","A. Fatayat","B. Muslimat","C. IPPNU","D. Kopri",2],
+            ["Fatwa yang dikeluarkan KH Hasyim Asy'ari pada 22 Oktober 1945 disebut...","A. Amanat Nasional","B. Resolusi Jihad","C. Sumpah Pemuda","D. Deklarasi Djuanda",1],
+            ["Hari Santri Nasional diperingati setiap tanggal...","A. 22 Oktober","B. 10 November","C. 17 Agustus","D. 1 Muharram",0],
+            ["Tradisi santri menempelkan wajah/hidung ke tangan Kyai saat bersalaman disebut...","A. Sungkem","B. Takzim","C. Tawadhu","D. Musafahah (Mencium tangan)",3],
+            ["Paham Aswaja mengambil sumber hukum Islam dari...","A. Al-Qur'an saja","B. Akal dan Logika","C. Al-Qur'an, Hadis, Ijma', Qiyas","D. Budaya lokal",2],
+            ["Ulama perumus paham aqidah Aswaja (Asy'ariyah) adalah...","A. Imam Syafi'i","B. Abu Hasan Al-Asy'ari","C. Imam Ghazali","D. Ibnu Sina",1],
+            ["Pondok Pesantren cikal bakal NU banyak tersebar di wilayah...","A. Jawa Timur","B. Jawa Barat","C. Sumatera","D. Kalimantan",0],
+            ["Tradisi membaca selawat Nabi menggunakan kitab Barzanji/Diba' disebut...","A. Tahlilan","B. Yasinan","C. Istighosah","D. Diba'an",3],
+            ["Mengusap wajah setelah selesai berdoa dalam tradisi NU hukumnya...","A. Wajib","B. Haram","C. Sunah","D. Mubah",2],
+            ["Membaca doa Qunut pada salat Subuh menurut Mazhab Syafi'i (Aswaja) hukumnya...","A. Wajib","B. Sunah Muakkad","C. Haram","D. Makruh",1],
+            ["Salat sunah yang mengiringi (sebelum/sesudah) salat fardu disebut salat sunah...","A. Rawatib","B. Tahajud","C. Dhuha","D. Witir",0],
+            ["Organisasi NU dibentuk sebagai respon penolakan pembongkaran makam Nabi oleh komite...","A. Komite Nasional","B. Komite Pemuda","C. Komite Hijaz","D. Komite Arab",2],
+            ["Tokoh NU yang pernah menjabat sebagai Presiden ke-4 Republik Indonesia adalah...","A. BJ Habibie","B. KH Abdurrahman Wahid (Gus Dur)","C. Megawati","D. Soeharto",1],
+            ["Ciri khas pakaian santri putra NU di pesantren adalah...","A. Memakai sarung dan peci","B. Memakai jas dan dasi","C. Memakai jubah panjang","D. Memakai kaos oblong",0],
+            ["Warga NU sangat menghormati Habaib. Habaib adalah sebutan untuk keturunan...","A. Wali Songo","B. Raja Arab","C. Malaikat","D. Nabi Muhammad SAW",3],
+            ["Membayar Fidyah bagi kakek/nenek renta yang tidak kuat puasa Ramadhan adalah...","A. Berpuasa di bulan lain","B. Membayar uang ke masjid","C. Mengganti dengan memberi makan orang miskin","D. Membaca Al-Qur'an",2],
+            ["Batas rakaat salat Tarawih yang paling umum diamalkan warga NU adalah...","A. 8 rakaat","B. 20 rakaat","C. 11 rakaat","D. 36 rakaat",1],
+            ["Melakukan tahlil 7 hari berturut-turut pasca kematian bertujuan untuk...","A. Mendoakan dan meringankan jenazah","B. Pesta perpisahan","C. Menghabiskan harta warisan","D. Memanggil arwah",0],
+            ["Permusyawaratan tertinggi organisasi NU di tingkat Nasional disebut...","A. Konferensi","B. Muktamar","C. Rapat Akbar","D. Musyawarah Kerja",1],
+            ["Tujuan utama didirikannya Nahdlatul Ulama adalah...","A. Menguasai pemerintahan","B. Melawan kerajaan asing","C. Berlakunya ajaran Islam Ahlussunnah Wal Jama'ah","D. Mencari keuntungan ekonomi",2]
+        ];
+
+        let currQ = 0;
+        let answers = new Array(50).fill(null);
+        let hpMonster = 100;
+
+        const qNum = document.getElementById('q-num');
+        const qText = document.getElementById('q-text');
+        const optBox = document.getElementById('options-box');
+        const btnSerang = document.getElementById('btn-serang');
+        const barMonster = document.getElementById('hp-monster');
+
+        function loadQ() {
+            qNum.innerText = `SOAL ${currQ + 1} / 50`;
+            qText.innerText = db[currQ][0];
+            optBox.innerHTML = '';
+            
+            for(let i=1; i<=4; i++) {
+                let btn = document.createElement('button');
+                btn.className = 'opt-btn';
+                if(answers[currQ] === i-1) btn.classList.add('selected');
+                btn.innerText = db[currQ][i];
+                btn.onclick = () => { answers[currQ] = i-1; loadQ(); };
+                optBox.appendChild(btn);
+            }
+
+            if(currQ === 49) {
+                btnSerang.innerText = "KUMPULKAN! 🔒";
+                btnSerang.style.background = "#e74c3c";
+            } else {
+                btnSerang.innerText = "JAWAB! 🟢";
+                btnSerang.style.background = "#009432";
+            }
+        }
+
+        function prevSoal() { if(currQ > 0) { currQ--; loadQ(); } }
+
+        function serang() {
+            if(answers[currQ] === null) {
+                alert("Pilih jawabanmu dulu, Santri!");
+                return;
+            }
+
+            if(answers[currQ] === db[currQ][5]) {
+                hpMonster = Math.max(0, hpMonster - 2); 
+                barMonster.style.width = hpMonster + "%";
+            } else {
+                document.body.classList.add('shake');
+                setTimeout(() => document.body.classList.remove('shake'), 300);
+            }
+
+            if(currQ < 49) { currQ++; loadQ(); } 
+            else { tamat(); }
+        }
+
+        function tamat() {
+            let skor = 0;
+            answers.forEach((ans, i) => { if(ans === db[i][5]) skor += 2; });
+            
+            document.getElementById('m-score').innerText = skor;
+            let title = document.getElementById('m-title');
+            let desc = document.getElementById('m-desc');
+            let icon = document.getElementById('m-icon');
+
+            if(skor >= 80) {
+                title.innerText = "ALHAMDULILLAH!";
+                title.style.color = "#009432";
+                icon.innerText = "⭐";
+                desc.innerText = "Amaliyah dan pemahaman ke-NU-an kamu sangat mantap.";
+            } else {
+                title.innerText = "BELUM TUNTAS";
+                title.style.color = "#e74c3c";
+                icon.innerText = "💦";
+                desc.innerText = "Monster Bid'ah belum kalah. Yuk ngaji Aswaja lagi!";
+                document.getElementById('hp-player').style.width = "10%";
+            }
+            
+            document.getElementById('result-modal').style.display = "flex";
+        }
+
+        loadQ();
+    </script>
+</body>
+</html>

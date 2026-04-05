@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pendekar Ilmu MI: Peta Ujian</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap');
+        
+        /* FIX LAYOUT: box-sizing memastikan padding tidak menambah lebar elemen */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: #1e272e;
+            margin: 0; padding: 0; min-height: 100vh;
+            color: white; overflow-x: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0fb9b1 0%, #2bcbba 100%);
+            padding: 30px 20px 20px 20px;
+            text-align: center;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative; z-index: 10;
+        }
+        .header h1 {
+            font-family: 'Fredoka One', cursive;
+            font-size: 28px; margin: 0;
+            color: #fff; text-shadow: 2px 2px 0px #0a3d62;
+        }
+        .header p {
+            font-size: 14px; font-weight: 700; opacity: 0.9; margin-top: 5px;
+        }
+
+        .map-container {
+            padding: 30px 20px;
+            display: flex; flex-direction: column; gap: 25px;
+            position: relative;
+        }
+
+        /* Garis vertikal Peta */
+        .map-container::before {
+            content: ''; position: absolute;
+            top: 20px; bottom: 20px; left: 45px;
+            width: 4px; background: #485460;
+            border-radius: 10px; z-index: 0;
+        }
+
+        .level-card {
+            background: #2d3436; border-radius: 15px;
+            padding: 15px; display: flex; align-items: flex-start;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative; z-index: 1;
+            border: 2px solid transparent;
+            transition: 0.2s;
+            width: 100%; /* Memastikan kartu tidak meluber */
+        }
+
+        /* Status Aktif */
+        .level-card.active-pat { border-color: #f1c40f; background: #353b48; }
+        .level-card.active-tka { border-color: #0984e3; background: #353b48; }
+
+        .level-icon {
+            font-size: 35px; width: 60px; height: 60px;
+            display: flex; justify-content: center; align-items: center;
+            background: #485460; border-radius: 10px;
+            margin-right: 15px; flex-shrink: 0;
+        }
+        .active-pat .level-icon { background: #f1c40f; box-shadow: 0 0 15px rgba(241, 196, 15, 0.5); }
+        .active-tka .level-icon { background: #0984e3; box-shadow: 0 0 15px rgba(9, 132, 227, 0.5); }
+
+        .level-info { 
+            flex-grow: 1; 
+            min-width: 0; /* FIX LAYOUT: Mencegah teks mendesak tombol keluar layar */
+        }
+        .timeline-tag {
+            font-size: 11px; font-weight: 900;
+            background: #7f8c8d; padding: 3px 8px;
+            border-radius: 5px; display: inline-block;
+            margin-bottom: 5px;
+        }
+        .active-pat .timeline-tag { background: #e74c3c; color: white; }
+        .active-tka .timeline-tag { background: #d63031; color: white; }
+        
+        .level-info h2 {
+            font-family: 'Fredoka One', cursive;
+            font-size: 18px; margin: 0 0 5px 0; color: #ecf0f1;
+        }
+        .level-info p {
+            font-size: 13px; color: #bdc3c7; margin: 0 0 10px 0;
+            line-height: 1.4;
+        }
+
+        .btn-enter {
+            background: #0fb9b1; color: white; border: none;
+            padding: 10px 15px; border-radius: 8px; font-weight: 900;
+            font-size: 13px; font-family: 'Nunito', sans-serif;
+            width: 100%; text-align: center; display: block;
+            text-decoration: none; box-shadow: 0 4px 0px #0a3d62;
+            transition: 0.1s;
+        }
+        .btn-enter:active { transform: translateY(4px); box-shadow: 0 0 0 #0a3d62; }
+        
+        .btn-tka { background: #0984e3; box-shadow: 0 4px 0px #075e9c; }
+        .btn-tka:active { box-shadow: 0 0 0 #075e9c; }
+
+        .btn-locked {
+            background: #485460; color: #bdc3c7; box-shadow: 0 4px 0px #1e272e;
+            pointer-events: none;
+        }
+
+    </style>
+       <link rel="manifest" href="manifest.json"> 
+</head>
+<body>
+
+    <div class="header">
+        <h1>🎓 PENDEKAR ILMU MI</h1>
+        <p>Selesaikan semua misi ujian untuk meraih Ijazah!</p>
+    </div>
+
+    <div class="map-container">
+        
+        <div class="level-card active-pat">
+            <div class="level-icon">👹</div>
+            <div class="level-info">
+                <span class="timeline-tag">📌 MISI 1</span>
+                <h2>Pulau 1: Ujian PAT</h2>
+                <p>Kalahkan Monster Lupa! Ujian teori materi Semester 2.</p>
+                <a href="menu_pat.html" class="btn-enter">MASUK ARENA ⚔️</a>
+            </div>
+        </div>
+
+        <div class="level-card active-tka">
+            <div class="level-icon">👑</div>
+            <div class="level-info">
+                <span class="timeline-tag">📌 MISI 2</span>
+                <h2>Pulau 2: Ujian TKA</h2>
+                <p>Ujian nalar Literasi dan Numerasi tingkat akhir.</p>
+                <a href="menu_tka.html" class="btn-enter btn-tka">MASUK ARENA 🧠</a>
+            </div>
+        </div>
+
+                <div class="level-card active-tka" style="border-color: #00b894; background: #353b48;">
+            <div class="level-icon" style="background: #00b894; box-shadow: 0 0 15px rgba(0, 184, 148, 0.5);">🐉</div>
+            <div class="level-info">
+                <span class="timeline-tag" style="background: #00b894; color: white;">📌 MISI 3</span>
+                <h2>Pulau 3: Asesmen Tulis</h2>
+                <p>Ujian Utama! Materi kelas 4, 5, 6 dan Muatan Lokal.</p>
+                <a href="menu_am.html" class="btn-enter" style="background: #00b894; box-shadow: 0 4px 0px #008f73;">MASUK ARENA ⚔️</a>
+            </div>
+        </div>
+
+
+                <div class="level-card active-praktik" style="border-color: #e67e22; background: #353b48;">
+            <div class="level-icon" style="background: #e67e22; box-shadow: 0 0 15px rgba(230, 126, 34, 0.5);">🕌</div>
+            <div class="level-info">
+                <span class="timeline-tag" style="background: #e67e22; color: white;">📌 MISI 4</span>
+                <h2>Pulau 4: Ujian Praktik</h2>
+                <p>Uji jurus wudu, salat, dan hafalan surah pendek.</p>
+                <a href="arena_praktik.html" class="btn-enter" style="background: #e67e22; box-shadow: 0 4px 0px #d35400;">MASUK PADEPOKAN 🥋</a>
+            </div>
+        </div>
+
+
+    </div>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('PWA Aktif! SW terdaftar:', reg.scope))
+                    .catch(err => console.log('SW Gagal:', err));
+            });
+        }
+    </script>
+</body>
+</html>

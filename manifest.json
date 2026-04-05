@@ -1,0 +1,17 @@
+{
+  "name": "Pendekar Ilmu MI",
+  "short_name": "Ujian MI",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1e272e",
+  "theme_color": "#0fb9b1",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3106/3106180.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

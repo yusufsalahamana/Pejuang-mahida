@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pulau 3: Asesmen Madrasah</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Nunito', sans-serif; background: #004d40;
+            margin: 0; padding: 20px; min-height: 100vh; color: white;
+        }
+        
+        .top-nav { display: flex; justify-content: flex-start; margin-bottom: 15px; }
+        .back-btn { background: #d35400; color: white; text-decoration: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; box-shadow: 0 4px 0 #a04000; display: inline-block; }
+        .back-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #a04000; }
+        
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { font-family: 'Fredoka One', cursive; font-size: 26px; color: #1abc9c; margin: 0 0 5px 0; text-shadow: 2px 2px 0 #000; line-height: 1.2; }
+        
+        .grid-mapel { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding-bottom: 30px;}
+        
+        .mapel-card {
+            background: #ecf0f1; border-radius: 15px; padding: 15px 10px; text-align: center;
+            text-decoration: none; color: #2c3e50; box-shadow: 0 6px 0 #bdc3c7;
+            transition: 0.1s; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .mapel-card:active { transform: translateY(6px); box-shadow: 0 0 0 #bdc3c7; }
+        
+        .mapel-icon { font-size: 35px; margin-bottom: 10px; }
+        .mapel-title { font-family: 'Fredoka One', cursive; font-size: 13px; margin: 0; line-height: 1.2;}
+        .mapel-soal { font-size: 10px; font-weight: 900; color: #fff; margin-top: 8px; background: #004d40; padding: 3px 8px; border-radius: 10px; }
+
+        /* Tipe Warna Kartu */
+        .card-agama { background: #dff9fb; box-shadow: 0 6px 0 #c7ecee; }
+        .card-agama:active { box-shadow: 0 0 0 #c7ecee; }
+        .card-umum { background: #f1f2f6; box-shadow: 0 6px 0 #ced6e0; }
+        .card-umum:active { box-shadow: 0 0 0 #ced6e0; }
+        .card-mulok { background: #fff2cc; box-shadow: 0 6px 0 #ffeaa7; }
+        .card-mulok:active { box-shadow: 0 0 0 #ffeaa7; }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <a href="index.html" class="back-btn">⬅️ KEMBALI</a>
+    </div>
+
+    <div class="header">
+        <h1>ASESMEN MADRASAH</h1>
+        <p style="margin:0; font-size:14px; color:#1abc9c; font-weight:900;">Materi Kelas 4, 5, dan 6</p>
+    </div>
+
+    <div class="grid-mapel">
+        <a href="arena_am_quran.html" class="mapel-card card-agama">
+            <div class="mapel-icon">📖</div>
+            <h2 class="mapel-title">QUR'AN HADIS</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_am_aqidah.html" class="mapel-card card-agama">
+            <div class="mapel-icon">🤲</div>
+            <h2 class="mapel-title">AQIDAH AKHLAK</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_am_fiqih.html" class="mapel-card card-agama">
+            <div class="mapel-icon">🧎‍♂️</div>
+            <h2 class="mapel-title">FIQIH</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_am_ski.html" class="mapel-card card-agama">
+            <div class="mapel-icon">🕌</div>
+            <h2 class="mapel-title">SKI</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_am_arab.html" class="mapel-card card-agama">
+            <div class="mapel-icon">🐪</div>
+            <h2 class="mapel-title">B. ARAB</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+
+        <a href="arena_am_pkn.html" class="mapel-card card-umum">
+            <div class="mapel-icon">🦅</div>
+            <h2 class="mapel-title">PKn</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_am_indo.html" class="mapel-card card-umum">
+            <div class="mapel-icon">🇮🇩</div>
+            <h2 class="mapel-title">B. INDONESIA</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_am_mtk.html" class="mapel-card card-umum">
+            <div class="mapel-icon">🧮</div>
+            <h2 class="mapel-title">MATEMATIKA</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_am_ipas.html" class="mapel-card card-umum">
+            <div class="mapel-icon">🌍</div>
+            <h2 class="mapel-title">IPAS</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_am_sbdp.html" class="mapel-card card-umum">
+            <div class="mapel-icon">🎨</div>
+            <h2 class="mapel-title">SBdP</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_am_inggris.html" class="mapel-card card-umum">
+            <div class="mapel-icon">🗽</div>
+            <h2 class="mapel-title">B. INGGRIS</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_am_pjok.html" class="mapel-card card-umum">
+            <div class="mapel-icon">⚽</div>
+            <h2 class="mapel-title">PJOK</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+
+        <a href="arena_am_jawa.html" class="mapel-card card-mulok">
+            <div class="mapel-icon">🎭</div>
+            <h2 class="mapel-title">B. JAWA</h2>
+            <div class="mapel-soal">MULOK</div>
+        </a>
+        <a href="arena_am_aswaja.html" class="mapel-card card-mulok">
+            <div class="mapel-icon">⭐</div>
+            <h2 class="mapel-title">ASWAJA</h2>
+            <div class="mapel-soal">MULOK</div>
+        </a>
+    </div>
+
+</body>
+</html>

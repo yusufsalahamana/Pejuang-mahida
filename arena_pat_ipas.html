@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arena PAT: IPAS Sem 2</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #0f3460; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #16213e, #1a1a2e); padding: 15px; border-bottom: 4px solid #e94560; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 30px; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 50%; border: 2px solid #fff; }
+        .hp-bar-bg { width: 100%; height: 10px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #2ecc71; width: 100%; }
+        .monster .hp-bar { background: #e74c3c; width: 100%; }
+        .name { font-size: 12px; font-weight: 900; margin-top: 3px; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #f4f7f6; color: #1a1a2e; }
+        .q-number { background: #e94560; color: white; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 900; margin-bottom: 10px; display: inline-block; }
+        .q-text { font-size: 18px; font-weight: 900; margin-bottom: 20px; line-height: 1.4; }
+        .options { display: flex; flex-direction: column; gap: 10px; padding-bottom: 30px; }
+        .opt-btn { background: white; border: 2px solid #ddd; border-radius: 10px; padding: 12px; text-align: left; font-size: 15px; font-weight: 700; color: #333; }
+        .opt-btn.selected { border-color: #e94560; background: #feeef1; }
+        .nav-area { background: white; padding: 12px 15px calc(12px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; flex-shrink: 0; border-top: 2px solid #eee; }
+        .nav-btn { background: #555; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 900; width: 48%; }
+        .nav-btn.serang { background: #e94560; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal-content { background: white; color: #333; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: center; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">👨‍🚀</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Astronot Muda</div>
+        </div>
+        <div style="font-family:'Fredoka One'; color:#e94560;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">👾</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Monster Asteroid</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">MISI 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat sistem...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" onclick="serang()">TEMBAK! 🚀</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <h2 id="m-title" style="font-family:'Fredoka One';">MISI SELESAI</h2>
+            <div style="font-size: 50px;">🏆</div>
+            <div style="font-size: 40px; font-weight: 900; color: #e94560;" id="m-score">0</div>
+            <p id="m-desc" style="font-weight: 700;"></p>
+            <a href="menu_pat.html" style="background:#e94560; color:white; text-decoration:none; padding:12px; display:block; border-radius:10px; font-weight:900;">KEMBALI</a>
+        </div>
+    </div>
+    <script>
+        const db = [
+            ["Pusat tata surya yang memancarkan cahaya sendiri adalah...","Matahari","Bumi","Bulan","Bintang",0],
+            ["Planet terkecil dan terdekat dari matahari adalah...","Mars","Venus","Merkurius","Saturnus",2],
+            ["Planet yang dijuluki Bintang Fajar adalah...","Jupiter","Venus","Mars","Uranus",1],
+            ["Garis edar planet mengelilingi matahari disebut...","Rotasi","Revolusi","Orbit","Satelit",2],
+            ["Planet yang memiliki julukan Planet Merah adalah...","Bumi","Mars","Saturnus","Neptunus",1],
+            ["Planet terbesar dalam tata surya kita adalah...","Jupiter","Saturnus","Uranus","Bumi",0],
+            ["Planet yang memiliki cincin paling indah adalah...","Neptunus","Uranus","Saturnus","Jupiter",2],
+            ["Benda langit yang mengelilingi planet disebut...","Meteor","Asteroid","Satelit","Komet",2],
+            ["Satelit alami milik Bumi adalah...","Titan","Phobos","Bulan","Deimos",2],
+            ["Sabuk asteroid terletak di antara orbit planet...","Bumi & Mars","Mars & Jupiter","Jupiter & Saturnus","Venus & Bumi",1],
+            ["Benda langit berekor yang menjauhi matahari adalah...","Meteor","Asteroid","Komet","Satelit",2],
+            ["Batu angkasa yang jatuh ke bumi dan terbakar di atmosfer disebut...","Meteorit","Meteoroid","Meteor","Asteroid",2],
+            ["Batu angkasa yang sampai ke permukaan bumi disebut...","Meteorit","Meteor","Komet","Bulan",0],
+            ["Kumpulan bintang, gas, dan debu yang sangat luas disebut...","Tata Surya","Galaksi","Rasi Bintang","Alam Semesta",1],
+            ["Nama galaksi tempat kita tinggal adalah...","Andromeda","Magellan","Bima Sakti","Sombrero",2],
+            ["Perputaran bumi pada porosnya disebut...","Revolusi","Rotasi","Evolusi","Orbit",1],
+            ["Waktu yang dibutuhkan bumi untuk satu kali rotasi adalah...","24 Jam","30 Hari","365 Hari","12 Jam",0],
+            ["Salah satu akibat dari rotasi bumi adalah...","Pergantian musim","Terjadinya siang dan malam","Perbedaan lama siang malam","Gerhana",1],
+            ["Perputaran bumi mengelilingi matahari disebut...","Rotasi","Orbit","Revolusi","Gravitasi",2],
+            ["Waktu bumi mengelilingi matahari (1 tahun) adalah...","354 Hari","365 1/4 Hari","29 Hari","24 Jam",1],
+            ["Akibat revolusi bumi adalah terjadinya...","Siang dan malam","Gerak semu harian matahari","Pergantian musim","Pasang surut",2],
+            ["Posisi Bulan berada di antara Matahari dan Bumi disebut Gerhana...","Bulan","Matahari","Bumi","Bintang",1],
+            ["Gerhana bulan terjadi saat posisi...","Matahari - Bulan - Bumi","Bulan - Matahari - Bumi","Matahari - Bumi - Bulan","Bumi - Matahari - Bulan",2],
+            ["Bayangan inti yang sangat gelap saat gerhana disebut...","Umbra","Penumbra","Atmosfer","Korona",0],
+            ["Bayangan kabur saat gerhana disebut...","Umbra","Korona","Penumbra","Halo",2],
+            ["Tahun yang didasarkan pada revolusi bumi adalah tahun...","Hijriah","Masehi","Saka","Jawa",1],
+            ["Tahun Kabisat pada kalender masehi terjadi setiap...","2 Tahun","3 Tahun","4 Tahun","5 Tahun",2],
+            ["Kalender Hijriah didasarkan pada revolusi...","Bumi ke Matahari","Bulan ke Bumi","Bumi ke Bulan","Bulan ke Matahari",1],
+            ["Jumlah hari pada tahun Kabisat adalah...","364","365","366","355",2],
+            ["Pasang surut air laut dipengaruhi oleh gaya gravitasi...","Matahari","Bumi","Bulan","Mars",2],
+            ["Energi yang dapat diperbarui dan tidak akan habis disebut energi...","Fosil","Alternatif","Kimia","Nuklir",1],
+            ["Energi utama di bumi yang digunakan untuk PLTS adalah...","Angin","Air","Matahari","Panas Bumi",2],
+            ["Alat untuk mengubah cahaya matahari menjadi listrik adalah...","Generator","Turbin","Panel Surya","Dinamo",2],
+            ["Gas dari kotoran ternak untuk memasak disebut...","Oksigen","Biogas","Biodiesel","Karbon",1],
+            ["Energi dari panas dalam perut bumi disebut...","Biomassa","Geotermal","Hidroelektrik","Nuklir",1],
+            ["Bahan bakar fosil berasal dari...","Sisa makhluk hidup jutaan tahun lalu","Kotoran hewan","Cahaya matahari","Aliran air",0],
+            ["Singkong dapat diolah menjadi bahan bakar...","Biodiesel","Biogas","Bioetanol","Avtur",2],
+            ["Alat untuk mengubah angin menjadi listrik adalah...","Panel","Kincir Angin","Bendungan","Baterai",1],
+            ["Cara menghemat listrik yang benar adalah...","Menyalakan lampu siang hari","Mematikan lampu saat tidak digunakan","Membuka kulkas terus","Menyalakan TV saat tidur",1],
+            ["Gas hasil pembakaran yang merusak lapisan ozon adalah...","Oksigen","CFC","Nitrogen","Uap air",1],
+            ["Kenaikan suhu rata-rata bumi disebut...","Hujan asam","Efek rumah kaca","Pemanasan Global","El Nino",2],
+            ["Gas utama penyebab efek rumah kaca adalah...","Oksigen","Karbon Dioksida","Nitrogen","Helium",1],
+            ["Penipisan lapisan ozon mengakibatkan sinar... masuk berlebih ke bumi.","X-Ray","Gamma","Ultraviolet (UV)","Inframerah",2],
+            ["Es di kutub mencair adalah dampak dari...","Hujan asam","Pemanasan Global","Gempa bumi","Tsunami",1],
+            ["Penanaman kembali hutan gundul disebut...","Abrasi","Erosi","Reboisasi","Irigasi",2],
+            ["Mengurangi penggunaan plastik adalah prinsip...","Reduce","Reuse","Recycle","Replace",0],
+            ["Mendaur ulang sampah menjadi barang baru adalah...","Reduce","Recycle","Reuse","Repair",1],
+            ["Tanaman bakau di pantai berfungsi mencegah...","Erosi","Abrasi","Banjir","Longsor",1],
+            ["Pelestarian hewan di dalam habitat aslinya disebut...","Ex situ","Kebun binatang","In situ","Museum",2],
+            ["Contoh pelestarian Ex Situ adalah...","Taman Nasional","Suaka Margasatwa","Kebun Binatang","Cagar Alam",2]
+        ];
+        let curr = 0, userAns = new Array(50).fill(null), hpM = 100;
+        function loadQ(){
+            document.getElementById('q-num').innerText = `MISI ${curr+1} / 50`;
+            document.getElementById('q-text').innerText = db[curr][0];
+            const box = document.getElementById('options-box'); box.innerHTML = '';
+            for(let i=1;i<=4;i++){
+                let b = document.createElement('button'); b.className = 'opt-btn';
+                if(userAns[curr]===i-1) b.classList.add('selected');
+                b.innerText = String.fromCharCode(64+i)+". "+db[curr][i];
+                b.onclick = ()=>{ userAns[curr]=i-1; loadQ(); }; box.appendChild(b);
+            }
+        }
+        function prevSoal(){ if(curr>0){ curr--; loadQ(); } }
+        function serang(){
+            if(userAns[curr]===null){ alert("Pilih jawaban!"); return; }
+            if(userAns[curr]===db[curr][5]){ hpM=Math.max(0,hpM-2); document.getElementById('hp-monster').style.width=hpM+"%"; }
+            else { document.body.classList.add('shake'); setTimeout(()=>document.body.classList.remove('shake'),300); }
+            if(curr<49){ curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat(){
+            let s = 0; userAns.forEach((a,i)=>{ if(a===db[i][5]) s+=2; });
+            document.getElementById('m-score').innerText = s;
+            document.getElementById('m-desc').innerText = s>=75?"Monster hancur! Kamu lulus PAT IPAS!":"Kamu kalah. Pelajari lagi Tata Surya!";
+            document.getElementById('result-modal').style.display="flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asesmen: SBdP</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #30336b; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #686de0, #4834d4); padding: 15px; border-bottom: 4px solid #f9ca24; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; border: 2px solid #fff; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #f0932b; width: 100%; }
+        .monster .hp-bar { background: #eb4d4b; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #130f40 !important; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #ffffff; color: #130f40; }
+        .q-number { background: #686de0; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 18px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: #f6f6f6; border: 2px solid #dff9fb; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-weight: 700; color: #130f40; transition: 0.1s; }
+        .opt-btn.selected { border-color: #686de0; background: #e0e0ff; }
+        .nav-area { background: white; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; border-top: 2px solid #eee; }
+        .nav-btn { background: #95afc0; color: white; border: none; padding: 15px; border-radius: 10px; font-family: 'Fredoka One', cursive; width: 48%; }
+        .nav-btn.serang { background: #686de0; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 5px solid #686de0; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">🎨</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Kreator Muda</div>
+        </div>
+        <div style="font-family:'Fredoka One'; color:#f9ca24;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">🗿</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Monster Monoton</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">KARYA 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat pertanyaan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" onclick="serang()">JAWAB! 🖌️</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <h2 style="font-family:'Fredoka One'; color:#4834d4;">KARYA TUNTAS!</h2>
+            <div style="font-size: 60px;">🏆</div>
+            <div style="font-size: 50px; font-weight: 900; color: #2ecc71;" id="m-score">0</div>
+            <p id="m-desc" style="font-weight:700;"></p>
+            <a href="menu_am.html" style="background:#4834d4; color:white; text-decoration:none; padding:15px; display:block; border-radius:10px; font-family:'Fredoka One'; margin-top:20px;">KEMBALI</a>
+        </div>
+    </div>
+    <script>
+        const db = [
+            ["Karya seni rupa yang memiliki dimensi panjang dan lebar saja disebut seni rupa...","1 Dimensi","2 Dimensi","3 Dimensi","4 Dimensi",1],
+            ["Contoh karya seni rupa 3 dimensi adalah...","Lukisan","Poster","Patung","Foto",2],
+            ["Seni menempel potongan kertas atau bahan lain pada permukaan gambar disebut...","Montase","Kolase","Mozaik","Mewarnai",1],
+            ["Karya seni yang dibuat dengan memotong gambar-gambar dari berbagai sumber lalu ditempel menjadi satu kesatuan tema baru disebut...","Kolase","Montase","Mozaik","Sulam",1],
+            ["Teknik membuat karya seni dengan menempelkan potongan bahan yang sejenis (misal pecahan kaca saja) disebut...","Kolase","Mozaik","Montase","Anyaman",1],
+            ["Warna primer terdiri dari warna...","Merah, Kuning, Biru","Hijau, Jingga, Ungu","Hitam dan Putih","Cokelat dan Abu-abu",0],
+            ["Campuran warna merah dan kuning akan menghasilkan warna...","Hijau","Ungu","Jingga (Orange)","Cokelat",2],
+            ["Lagu yang dinyanyikan oleh satu orang disebut...","Duet","Trio","Solo","Kuartet",2],
+            ["Alat musik yang dimainkan dengan cara ditiup adalah...","Gitar","Seruling","Drum","Biola",1],
+            ["Alat musik ritmis adalah alat musik yang...","Memiliki nada","Tidak memiliki nada (hanya pengatur tempo)","Ditiup","Digesek",1],
+            ["Angklung adalah alat musik tradisional dari...","Jawa Timur","Jawa Barat","Bali","Papua",1],
+            ["Tangga nada yang terdiri dari 7 nada (do-re-mi-fa-sol-la-si) disebut tangga nada...","Pentatonis","Diatonis","Minor","Mayor",1],
+            ["Tangga nada pentatonis (5 nada) biasanya digunakan pada alat musik tradisional...","Piano","Gamelan","Gitar","Biola",1],
+            ["Tarian yang dibawakan oleh lebih dari dua orang penari disebut tari...","Tunggal","Berpasangan","Kelompok","Massal",2],
+            ["Pola lantai yang membentuk garis lurus dari kiri ke kanan atau sebaliknya disebut pola...","Vertikal","Horizontal","Diagonal","Melingkar",1],
+            ["Tari Saman dari Aceh menggunakan pola lantai...","Lingkaran","Diagonal","Garis Lurus Horizontal","Vertikal",2],
+            ["Properti utama dalam tari Piring dari Sumatera Barat adalah...","Selendang","Piring","Payung","Keris",1],
+            ["Reklame yang berisi ajakan untuk mengikuti aturan pemerintah atau imbauan sosial disebut reklame...","Komersial","Non-komersial (Layanan Masyarakat)","Promosi","Niaga",1],
+            ["Reklame visual berbentuk selebaran kertas yang dilipat disebut...","Poster","Baliho","Brosur","Embalase",2],
+            ["Interval nada adalah...","Cepat lambatnya lagu","Jarak antara satu nada ke nada lain","Tinggi rendahnya suara","Keras lembutnya bunyi",1],
+            ["Lagu bertangga nada Mayor biasanya bersifat...","Sedih","Riang gembira dan bersemangat","Syahdu","Lembut",1],
+            ["Lagu 'Indonesia Raya' memiliki tangga nada...","Minor","Mayor","Pelog","Slendro",1],
+            ["Pencipta lagu kebangsaan Indonesia Raya adalah...","Ibu Sud","W.R. Supratman","H. Mutahar","Ismail Marzuki",1],
+            ["Tari Remo dari Jawa Timur sering dipentaskan sebagai tarian...","Penyambutan tamu","Mencari ikan","Perang","Panen raya",0],
+            ["Teknik membuat patung dengan cara mengurangi bahan sedikit demi sedikit menggunakan alat pahat disebut teknik...","Pahat","Butsir","Cetak","Cor",0],
+            ["Bahan lunak untuk membuat patung contohnya adalah...","Kayu","Batu","Tanah liat / Plastisin","Besi",2],
+            ["Corak patung yang meniru bentuk alam (manusia, hewan, tumbuhan) secara persis disebut...","Abstrak","Figuratif / Realis","Deformatif","Geometris",1],
+            ["Ciri utama karya batik tradisional adalah menggunakan alat yang disebut...","Kuas","Pena","Canting","Palet",2],
+            ["Bahan untuk merintangi warna pada proses membatik adalah...","Malam (Lilin panas)","Minyak","Air","Cat Akrilik",0],
+            ["Anyaman yang dibuat dari bambu biasanya digunakan untuk membuat...","Kain","Tikar dan Bakul","Buku","Kaca",1],
+            ["Gambar yang menceritakan urutan kejadian secara lucu dan memiliki balon teks disebut...","Poster","Komik","Lukisan","Brosur",1],
+            ["Tujuan utama pameran seni rupa di sekolah adalah...","Mencari uang","Mengomunikasikan hasil karya kepada orang lain","Membuang sampah","Mengisi waktu kosong",1],
+            ["Cepat lambatnya sebuah lagu dinyanyikan disebut...","Nada","Ritme","Tempo","Dinamika",2],
+            ["Alat musik piano dan organ termasuk alat musik...","Ritmis","Melodis","Harmonis","Dinamis",2],
+            ["Tari Kecak dari Bali memiliki pola lantai...","Garis lurus","Lengkung melingkar","Zig-zag","Diagonal",1],
+            ["Batik yang motifnya dikerjakan dengan cara dicap menggunakan stempel logam disebut batik...","Tulis","Cap","Printing","Ikat Celup",1],
+            ["Teknik 'Ikat Celup' di Indonesia sering disebut juga seni...","Sulam","Jumputan","Tenun","Bordir",1],
+            ["Properti tari Jaipong yang sangat ikonik adalah...","Topeng","Selendang (Sampur)","Busur panah","Kipas",1],
+            ["Patung Monas termasuk jenis patung...","Religi","Dekorasi","Monumen","Arsitektur",2],
+            ["Lagu daerah 'Gundul Pacul' berasal dari...","Jawa Barat","Jawa Tengah","Kalimantan","Sumatera",1],
+            ["Interval nada dari nada Do ke Do lagi (nada yang sama) disebut...","Prim","Sekon","Terts","Kuart",0],
+            ["Tokoh yang memimpin sebuah pertunjukan musik orkestra disebut...","Sutradara","Dirigen / Konduktor","Koreografer","Produser",1],
+            ["Seni rupa yang fungsi utamanya adalah sebagai hiasan dinding saja disebut seni rupa...","Murni","Terapan","Modern","Klasik",0],
+            ["Seni rupa yang fungsi utamanya dapat digunakan dalam kehidupan sehari-hari (seperti kursi kayu) disebut seni rupa...","Murni","Terapan","Abstrak","Tradisional",1],
+            ["Teknik pewarnaan gradasi biasanya dilakukan agar gambar terlihat...","Lebih kusam","Memiliki dimensi atau volume (hidup)","Gelap","Berantakan",1],
+            ["Boneka besar khas Betawi yang sering muncul dalam perayaan disebut...","Wayang","Ondel-ondel","Barongsai","Reog",1],
+            ["Tari Jaran Kepang (Kuda Lumping) sangat populer di wilayah...","Sumatera","Sulawesi","Jawa","Papua",2],
+            ["Media gambar yang paling umum digunakan adalah...","Kertas dan Kanvas","Kaca","Batu","Besi",0],
+            ["Lagu yang memiliki tempo 'Lento' artinya lagu tersebut dinyanyikan secara...","Sangat cepat","Cepat","Lambat","Sedang",2],
+            ["Seni melipat kertas yang berasal dari Jepang disebut...","Kirigami","Origami","Ikebana","Bonsai",1]
+        ];
+        let curr = 0, userAns = new Array(50).fill(null), hpM = 100;
+        function loadQ(){
+            document.getElementById('q-num').innerText = `KARYA ${curr+1} / 50`;
+            document.getElementById('q-text').innerText = db[curr][0];
+            const box = document.getElementById('options-box'); box.innerHTML = '';
+            for(let i=1;i<=4;i++){
+                let b = document.createElement('button'); b.className = 'opt-btn';
+                if(userAns[curr]===i-1) b.classList.add('selected');
+                b.innerText = String.fromCharCode(64+i)+". "+db[curr][i];
+                b.onclick = ()=>{ userAns[curr]=i-1; loadQ(); }; box.appendChild(b);
+            }
+        }
+        function prevSoal(){ if(curr>0){ curr--; loadQ(); } }
+        function serang(){
+            if(userAns[curr]===null){ alert("Gunakan jurus seni (jawaban) dulu!"); return; }
+            if(userAns[curr]===db[curr][5]){ hpM=Math.max(0,hpM-2); document.getElementById('hp-monster').style.width=hpM+"%"; }
+            else { document.body.classList.add('shake'); setTimeout(()=>document.body.classList.remove('shake'),300); }
+            if(curr<49){ curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat(){
+            let s = 0; userAns.forEach((a,i)=>{ if(a===db[i][5]) s+=2; });
+            document.getElementById('m-score').innerText = s;
+            document.getElementById('m-desc').innerText = s>=75?"Keren! Jiwa senimu sangat tinggi.":"Kurang sedikit lagi, mari pelajari pola lantai dan interval nada!";
+            document.getElementById('result-modal').style.display="flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

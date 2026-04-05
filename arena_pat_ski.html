@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arena PAT: SKI Sem 2</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #1b4332; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #2d6a4f, #1b4332); padding: 15px; border-bottom: 4px solid #ffb703; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 30px; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 50%; border: 2px solid #ffb703; }
+        .hp-bar-bg { width: 100%; height: 10px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #2ecc71; width: 100%; }
+        .monster .hp-bar { background: #e74c3c; width: 100%; }
+        .name { font-size: 12px; font-weight: 900; margin-top: 3px; color: #ffb703; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #fdfcf0; color: #1b4332; }
+        .q-number { background: #2d6a4f; color: white; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 900; margin-bottom: 10px; display: inline-block; }
+        .q-text { font-size: 18px; font-weight: 900; margin-bottom: 20px; line-height: 1.4; }
+        .options { display: flex; flex-direction: column; gap: 10px; padding-bottom: 30px; }
+        .opt-btn { background: white; border: 2px solid #adc178; border-radius: 10px; padding: 12px; text-align: left; font-size: 15px; font-weight: 700; color: #1b4332; }
+        .opt-btn.selected { border-color: #2d6a4f; background: #e9f5db; }
+        .nav-area { background: white; padding: 12px 15px calc(12px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; flex-shrink: 0; border-top: 2px solid #eee; }
+        .nav-btn { background: #6c757d; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 900; width: 48%; }
+        .nav-btn.serang { background: #fb8500; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal-content { background: white; color: #333; padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; text-align: center; border: 4px solid #fb8500; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">👳</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Santri Pejuang</div>
+        </div>
+        <div style="font-family:'Fredoka One'; color:#ffb703;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">👹</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Jin Kelalaian</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">LEMBAR 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat sejarah...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" onclick="serang()">JAWAB! 📜</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <h2 id="m-title" style="font-family:'Fredoka One';">UJIAN TUNTAS</h2>
+            <div style="font-size: 50px;">🕌</div>
+            <div style="font-size: 40px; font-weight: 900; color: #2d6a4f;" id="m-score">0</div>
+            <p id="m-desc" style="font-weight: 700;"></p>
+            <a href="menu_pat.html" style="background:#2d6a4f; color:white; text-decoration:none; padding:12px; display:block; border-radius:10px; font-weight:900;">KEMBALI</a>
+        </div>
+    </div>
+    <script>
+        const db = [
+            ["Wali tertua yang menyebarkan Islam di Gresik adalah...","Sunan Maulana Malik Ibrahim","Sunan Ampel","Sunan Giri","Sunan Bonang",0],
+            ["Maulana Malik Ibrahim dimakamkan di daerah...","Tuban","Gresik","Surabaya","Lamongan",1],
+            ["Strategi dakwah Maulana Malik Ibrahim yang utama adalah...","Peperangan","Perdagangan & Pertanian","Kesenian","Politik",1],
+            ["Maulana Malik Ibrahim sering dijuluki...","Sunan Gresik","Sunan Ampel","Sunan Kalijaga","Sunan Kudus",0],
+            ["Nama asli Sunan Ampel adalah...","Raden Paku","Raden Rahmat","Raden Mas Syahid","Raden Qasim",1],
+            ["Pusat dakwah Sunan Ampel di Surabaya adalah...","Ampel Denta","Giri Kedaton","Trowulan","Demak",0],
+            ["Ajaran moral Sunan Ampel yang terkenal adalah...","Panca Sila","Moh Limo","Suluk Wujil","Pepali Pitu",1],
+            ["Arti dari 'Moh Main' adalah tidak mau...","Mencuri","Berjudi","Mabuk","Narkoba",1],
+            ["Sunan Ampel mengkader pemimpin Islam, salah satunya raja pertama Demak yaitu...","Raden Patah","Hayam Wuruk","Gajah Mada","Sultan Agung",0],
+            ["Nama kecil Sunan Giri adalah...","Raden Qasim","Makdum Ibrahim","Raden Paku","Syarif Hidayatullah",2],
+            ["Kerajaan dakwah yang didirikan Sunan Giri disebut...","Banten","Mataram","Giri Kedaton","Demak",2],
+            ["Permainan anak ciptaan Sunan Giri untuk dakwah adalah...","Gasing","Jelungan","Layangan","Egrang",1],
+            ["Sunan Giri mengirim utusan dakwah hingga ke...","Arab","Eropa","Maluku dan Lombok","Afrika",2],
+            ["Nama asli Sunan Bonang adalah...","Makdum Ibrahim","Raden Umar Said","Raden Patah","Raden Syahid",0],
+            ["Sunan Bonang adalah putra dari...","Sunan Giri","Sunan Ampel","Sunan Kudus","Sunan Kalijaga",1],
+            ["Alat musik gamelan yang dimodifikasi Sunan Bonang adalah...","Saron","Gong","Bonang","Kendang",2],
+            ["Lagu dakwah Sunan Bonang yang berisi obat hati adalah...","Lir-Ilir","Tombo Ati","Cublak Suweng","Ilir-Ilir",1],
+            ["Makam Sunan Bonang terletak di kota...","Gresik","Demak","Tuban","Cirebon",2],
+            ["Nama asli Sunan Drajat adalah...","Raden Qasim","Raden Syahid","Ja'far Shadiq","Umar Said",0],
+            ["Sunan Drajat sangat memperhatikan kesejahteraan...","Bangsawan","Fakir Miskin & Yatim","Prajurit","Pedagang Asing",1],
+            ["Ajaran Sunan Drajat tentang tongkat untuk orang buta berarti...","Beri harta","Beri petunjuk ilmu","Beri makan","Beri baju",1],
+            ["Makam Sunan Drajat berada di wilayah...","Lamongan","Gresik","Tuban","Kediri",0],
+            ["Sunan Kalijaga pada masa muda pernah dikenal sebagai...","Raden Patah","Lokajaya","Raden Rahmat","Syarif",1],
+            ["Metode dakwah Sunan Kalijaga yang paling populer adalah...","Wayang Kulit","Perdagangan","Pertanian","Politik",0],
+            ["Lagu dakwah ciptaan Sunan Kalijaga adalah...","Ilir-Ilir","Tombo Ati","Lir-Ilir","Gundul Pacul",2],
+            ["Peninggalan Sunan Kalijaga di Masjid Agung Demak adalah...","Mimbar","Tiang Tatal","Kubah Emas","Menara",1],
+            ["Nama asli Sunan Kudus adalah...","Ja'far Shadiq","Raden Umar Said","Syarif Hidayatullah","Raden Qasim",0],
+            ["Sikap toleransi Sunan Kudus kepada umat Hindu adalah melarang makan...","Kambing","Ayam","Sapi","Bebek",2],
+            ["Peninggalan ikonik Sunan Kudus adalah masjid dengan...","Atap tumpang","Menara seperti candi","Kubah besar","Pintu emas",1],
+            ["Sunan Kudus dikenal sebagai wali yang ahli dalam bidang...","Seni","Pertanian","Fiqih & Hukum","Astronomi",2],
+            ["Sunan Muria adalah putra dari...","Sunan Kalijaga","Sunan Giri","Sunan Ampel","Sunan Bonang",0],
+            ["Nama asli Sunan Muria adalah...","Raden Umar Said","Raden Patah","Ja'far Shadiq","Makdum Ibrahim",0],
+            ["Sasaran utama dakwah Sunan Muria adalah...","Rakyat pesisir","Pejabat keraton","Masyarakat pegunungan & pelosok","Pedagang",2],
+            ["Karya seni Sunan Muria adalah tembang...","Sinom & Kinanthi","Asmaradana","Pocung","Dhandhanggula",0],
+            ["Nama asli Sunan Gunung Jati adalah...","Fatahillah","Syarif Hidayatullah","Raden Patah","Raden Paku",1],
+            ["Sunan Gunung Jati menyebarkan Islam di wilayah...","Jawa Timur","Jawa Tengah","Jawa Barat","Madura",2],
+            ["Sunan Gunung Jati mendirikan kesultanan...","Demak","Mataram","Cirebon & Banten","Pajang",2],
+            ["Nasihat terkenal Sunan Gunung Jati adalah titip tajug dan...","Fakir Miskin","Prajurit","Anak Cucu","Harta",0],
+            ["Wali Songo berjumlah...","7","8","9","10",2],
+            ["Kerajaan Islam pertama di Pulau Jawa adalah...","Majapahit","Singasari","Demak","Mataram",2],
+            ["Wali yang menggunakan seni wayang untuk menarik masyarakat adalah...","Sunan Kudus","Sunan Kalijaga","Sunan Giri","Sunan Ampel",1],
+            ["Tarian yang diiringi selawat peninggalan Sunan Kalijaga adalah...","Tari Remo","Grebeg Maulud","Zapin","Tari Piring",1],
+            ["Tradisi sekaten awalnya ditujukan untuk...","Ulang tahun raja","Pesta rakyat","Menarik orang mengucap syahadat","Panen raya",2],
+            ["Atap masjid tumpang tiga melambangkan...","Islam, Iman, Ihsan","Nabi, Wali, Ulama","Pagi, Siang, Malam","Bumi, Laut, Udara",0],
+            ["Wali yang mendapat julukan Wali al-Ilmi adalah...","Sunan Ampel","Sunan Kudus","Sunan Giri","Sunan Kalijaga",1],
+            ["Sunan Giri dimakamkan di bukit Giri, kabupaten...","Lamongan","Gresik","Tuban","Mojokerto",1],
+            ["Wali yang menciptakan tembang dolanan Cublak-cublak Suweng adalah...","Sunan Giri","Sunan Bonang","Sunan Kalijaga","Sunan Muria",0],
+            ["Gamelan Sekaten diletakkan di...","Pasar","Halaman Masjid Agung Demak","Tengah Hutan","Pinggir Laut",1],
+            ["Dakwah Wali Songo bersifat damai melalui...","Perang","Akulturasi Budaya","Intimidasi","Kekuasaan",1],
+            ["Salah satu Wali Songo yang merupakan cucu Prabu Siliwangi adalah...","Sunan Kalijaga","Sunan Gunung Jati","Sunan Kudus","Sunan Giri",1]
+        ];
+        let curr = 0, userAns = new Array(50).fill(null), hpM = 100;
+        function loadQ(){
+            document.getElementById('q-num').innerText = `LEMBAR ${curr+1} / 50`;
+            document.getElementById('q-text').innerText = db[curr][0];
+            const box = document.getElementById('options-box'); box.innerHTML = '';
+            for(let i=1;i<=4;i++){
+                let b = document.createElement('button'); b.className = 'opt-btn';
+                if(userAns[curr]===i-1) b.classList.add('selected');
+                b.innerText = String.fromCharCode(64+i)+". "+db[curr][i];
+                b.onclick = ()=>{ userAns[curr]=i-1; loadQ(); }; box.appendChild(b);
+            }
+        }
+        function prevSoal(){ if(curr>0){ curr--; loadQ(); } }
+        function serang(){
+            if(userAns[curr]===null){ alert("Pilih jawaban!"); return; }
+            if(userAns[curr]===db[curr][5]){ hpM=Math.max(0,hpM-2); document.getElementById('hp-monster').style.width=hpM+"%"; }
+            else { document.body.classList.add('shake'); setTimeout(()=>document.body.classList.remove('shake'),300); }
+            if(curr<49){ curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat(){
+            let s = 0; userAns.forEach((a,i)=>{ if(a===db[i][5]) s+=2; });
+            document.getElementById('m-score').innerText = s;
+            document.getElementById('m-desc').innerText = s>=75?"Alhamdulillah! Kamu lulus PAT SKI!":"Maaf, kamu perlu mengulang sejarah Wali Songo!";
+            document.getElementById('result-modal').style.display="flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

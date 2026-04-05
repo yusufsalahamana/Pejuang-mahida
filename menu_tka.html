@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pulau 2: Arena TKA</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif; background: #0984e3;
+            margin: 0; padding: 20px; min-height: 100vh; color: white;
+        }
+        
+        .top-nav { display: flex; justify-content: flex-start; margin-bottom: 15px; }
+        .back-btn { background: #d63031; color: white; text-decoration: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; box-shadow: 0 4px 0 #b2bec3; display: inline-block; }
+        .back-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #b2bec3; }
+        
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { font-family: 'Fredoka One', cursive; font-size: 26px; color: #ffeaa7; margin: 0 0 5px 0; text-shadow: 2px 2px 0 #2d3436; line-height: 1.2; }
+        
+        .grid-mapel { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 500px; margin: auto;}
+        
+        .mapel-card {
+            background: #dfe6e9; border-radius: 15px; padding: 25px 15px; text-align: center;
+            text-decoration: none; color: #2d3436; box-shadow: 0 6px 0 #b2bec3;
+            transition: 0.1s; display: flex; flex-direction: column; align-items: center;
+        }
+        .mapel-card:active { transform: translateY(6px); box-shadow: 0 0 0 #b2bec3; }
+        
+        .mapel-icon { font-size: 45px; margin-bottom: 10px; }
+        .mapel-title { font-family: 'Fredoka One', cursive; font-size: 16px; margin: 0; }
+        .mapel-soal { font-size: 12px; font-weight: 900; color: #fff; margin-top: 10px; background: #0984e3; padding: 5px 10px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <a href="index.html" class="back-btn">⬅️ PETA UTAMA</a>
+    </div>
+
+    <div class="header">
+        <h1>TES KEMAMPUAN AKADEMIK</h1>
+        <p style="margin:0; font-size:14px; color:#dfe6e9;">Uji Nalar: Literasi & Numerasi</p>
+    </div>
+
+    <div class="grid-mapel">
+        <a href="arena_tka_indo.html" class="mapel-card">
+            <div class="mapel-icon">📖</div>
+            <h2 class="mapel-title">B. INDONESIA</h2>
+            <div class="mapel-soal">LITERASI (50)</div>
+        </a>
+        <a href="arena_tka_mtk.html" class="mapel-card">
+            <div class="mapel-icon">🧮</div>
+            <h2 class="mapel-title">MATEMATIKA</h2>
+            <div class="mapel-soal">NUMERASI (50)</div>
+        </a>
+    </div>
+
+</body>
+</html>

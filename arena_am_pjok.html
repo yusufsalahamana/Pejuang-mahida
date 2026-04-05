@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asesmen: PJOK</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #006266; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #10ac84, #01a3a4); padding: 15px; border-bottom: 4px solid #feca57; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; border: 2px solid #fff; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #feca57; width: 100%; }
+        .monster .hp-bar { background: #ee5253; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; text-align: center;}
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #5f27cd !important; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #c8d6e5; color: #222f3e; position: relative; }
+        .q-number { background: #10ac84; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 20px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #8395a7; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-family: 'Nunito', sans-serif; font-weight: 700; color: #222f3e; transition: 0.1s; }
+        .opt-btn.selected { border-color: #10ac84; background: #1dd1a1; color: #fff; }
+        .nav-area { background: white; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 10; flex-shrink: 0; }
+        .nav-btn { background: #576574; color: white; border: none; padding: 15px 10px; border-radius: 10px; font-family: 'Fredoka One', cursive; font-size: 16px; width: 48%; }
+        .nav-btn.serang { background: #10ac84; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; text-align: center;}
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; max-width: 400px; width: 100%; border: 5px solid #10ac84; }
+        .modal-title { font-family: 'Fredoka One', cursive; font-size: 24px; color: #10ac84; margin-bottom: 10px; }
+        .modal-score { font-size: 60px; font-weight: 900; color: #feca57; margin: 10px 0; }
+        .modal-btn { background: #10ac84; color: white; text-decoration: none; padding: 15px; border-radius: 10px; display: block; font-family: 'Fredoka One', cursive; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">🏃‍♂️</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Atlet Sekolah</div>
+        </div>
+        <div style="font-family:'Fredoka One'; font-size:20px; color:#fff;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">🍔</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Monster Junkfood</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">UJIAN 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat pertanyaan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" id="btn-serang" onclick="serang()">SMASH! 🏸</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="m-title">SEHAT BUGAR!</div>
+            <div style="font-size: 50px;" id="m-icon">🏅</div>
+            <div class="modal-score" id="m-score">100</div>
+            <p id="m-desc" style="font-weight:700;">Kamu lulus teori PJOK dengan cemerlang!</p>
+            <a href="menu_am.html" class="modal-btn">KEMBALI KE MENU 🗺️</a>
+        </div>
+    </div>
+    <script>
+        const db = [
+            ["Permainan sepak bola, bola voli, dan bola basket termasuk dalam permainan...","Bola kecil","Bola besar","Atletik","Bela diri",1],
+            ["Lama waktu normal pertandingan sepak bola adalah...","2 x 45 menit","2 x 30 menit","4 x 15 menit","2 x 20 menit",0],
+            ["Induk organisasi sepak bola di Indonesia adalah...","PBVSI","PBSI","PSSI","IPSI",2],
+            ["Teknik mengoper bola kepada teman satu tim dalam permainan sepak bola disebut...","Dribbling","Shooting","Passing","Heading",2],
+            ["Gerakan memukul bola dengan keras dan menukik ke area lawan dalam bola voli disebut...","Servis","Passing","Blocking","Smash",3],
+            ["Berapa jumlah pemain dalam satu regu bola voli di lapangan?","5 orang","6 orang","11 orang","12 orang",1],
+            ["Induk organisasi bola basket di Indonesia adalah...","PERBASI","PSSI","PBSI","PRSI",0],
+            ["Tujuan utama permainan bola basket adalah...","Memasukkan bola ke gawang","Memasukkan bola ke ring lawan sebanyak-banyaknya","Melewati net","Memukul bola sejauh mungkin",1],
+            ["Kasti dan Rounders termasuk dalam kelompok permainan...","Bola besar","Atletik","Bola kecil","Senam",2],
+            ["Gerak dasar dalam permainan kasti adalah...","Menendang, menyundul, menggiring","Melempar, menangkap, memukul","Memukul, smash, bloking","Berenang, menyelam, meluncur",1],
+            ["Tongkat pemukul dalam permainan kasti biasanya terbuat dari...","Besi","Plastik","Karet","Kayu",3],
+            ["Induk organisasi atletik di Indonesia adalah...","PASI","PSSI","PRSI","PERBASI",0],
+            ["Nomor lari jarak pendek (sprint) menempuh jarak...","100m, 200m, 400m","800m, 1500m","Maraton (42 km)","3000m",0],
+            ["Start yang digunakan untuk lari jarak pendek adalah start...","Berdiri","Melayang","Jongkok","Duduk",2],
+            ["Aba-aba pada lari jarak pendek adalah...","Satu, Dua, Tiga!","Bersedia, Siap, Ya!","Awas, Lari!","Maju, Jalan!",1],
+            ["Gerakan melompat ke depan sejauh-jauhnya dengan tumpuan satu kaki disebut...","Lompat jauh","Lompat tinggi","Lompat galah","Tolak peluru",0],
+            ["Pencak silat adalah olahraga bela diri asli dari...","Jepang","Korea","Tiongkok","Indonesia",3],
+            ["Induk organisasi pencak silat di Indonesia adalah...","IPSI","PRSI","PSSI","PBVSI",0],
+            ["Sikap dasar untuk bertahan dan memperkokoh posisi tubuh dalam pencak silat disebut sikap...","Pukulan","Kuda-kuda","Tendangan","Tangkisan",1],
+            ["Upaya menahan serangan lawan dengan menggunakan tangan atau kaki disebut...","Tendangan","Kuda-kuda","Tangkisan","Pukulan",2],
+            ["Kemampuan tubuh untuk melakukan aktivitas sehari-hari tanpa kelelahan yang berlebihan disebut...","Kekuatan","Kebugaran jasmani","Keseimbangan","Kelincahan",1],
+            ["Latihan sit-up sangat baik untuk memperkuat otot...","Leher","Punggung","Perut","Kaki",2],
+            ["Latihan push-up bertujuan untuk melatih kekuatan otot...","Lengan dan dada","Perut","Kaki dan paha","Leher",0],
+            ["Latihan berlari bolak-balik (shuttle run) bertujuan untuk melatih...","Kekuatan","Kelenturan","Kelincahan (Agility)","Daya tahan",2],
+            ["Gerakan senam yang dilakukan di atas matras disebut...","Senam irama","Senam lantai","Senam SKJ","Senam aerobik",1],
+            ["Roll depan adalah gerakan senam lantai yaitu...","Mengguling ke belakang","Melenting ke atas","Mengguling ke depan","Berputar seperti roda",2],
+            ["Sikap lilin dilakukan dengan posisi badan telentang lalu kedua kaki diangkat lurus ke...","Bawah","Samping","Depan","Atas",3],
+            ["Senam yang diiringi oleh musik, ketukan, atau lagu disebut senam...","Lantai","Ketangkasan","Irama / Ritmik","Militer",2],
+            ["Sebelum melakukan olahraga inti, kita diwajibkan untuk melakukan...","Pendinginan","Makan berat","Pemanasan","Tidur",2],
+            ["Tujuan utama pemanasan sebelum berolahraga adalah...","Membuat otot kaku","Mencegah terjadinya cedera otot","Menambah rasa kantuk","Menghabiskan tenaga",1],
+            ["Gaya renang yang gerakannya menyerupai katak berenang adalah gaya...","Gaya bebas","Gaya dada (katak)","Gaya punggung","Gaya kupu-kupu",1],
+            ["Pada renang gaya punggung, posisi badan...","Telungkup menghadap air","Miring ke kanan","Telentang menghadap ke atas","Meringkuk",2],
+            ["Gaya renang yang paling cepat adalah gaya...","Gaya punggung","Gaya kupu-kupu","Gaya dada","Gaya bebas (Crawl)",3],
+            ["Alat bantu yang aman digunakan untuk pemula belajar berenang adalah...","Baju besi","Sepatu roda","Pelampung (Ban/Papan)","Kacamata hitam",2],
+            ["Cara menjaga keselamatan di kolam renang adalah...","Berlari-lari di pinggir kolam","Mendorong teman ke kolam","Makan sambil berenang","Tidak berenang di area yang terlalu dalam jika belum mahir",3],
+            ["Penyakit demam berdarah (DBD) ditularkan oleh nyamuk...","Anopheles","Aedes aegypti","Culex","Mansonia",1],
+            ["Cara pencegahan penyakit demam berdarah yang paling efektif adalah...","3M Plus (Menguras, Menutup, Mengubur)","Makan yang banyak","Tidur seharian","Olahraga malam hari",0],
+            ["Penyakit menular yang menyerang organ pernapasan (paru-paru) adalah...","Panu","TBC (Tuberkulosis)","Diare","Usus buntu",1],
+            ["Penyakit kulit yang menular akibat jamur biasanya disebabkan oleh...","Kurang olahraga","Makan terlalu banyak","Malas menjaga kebersihan tubuh (jarang mandi)","Terlalu sering mencuci tangan",2],
+            ["Rokok sangat berbahaya bagi kesehatan karena mengandung zat racun, salah satunya...","Vitamin C","Nikotin dan Tar","Kalsium","Protein",1],
+            ["Dampak buruk mengonsumsi narkoba bagi pelajar adalah...","Menjadi pintar","Badan sehat","Kecanduan, merusak otak, dan masa depan hancur","Disukai banyak teman",2],
+            ["Setelah buang air (BAB/BAK), kita wajib membersihkan alat reproduksi dengan...","Kertas basah","Tisu kering","Air bersih yang mengalir","Daun",2],
+            ["Pakaian dalam harus diganti secara rutin, minimal...","Satu minggu sekali","Tiga hari sekali","Dua kali sehari sesudah mandi","Satu bulan sekali",2],
+            ["Bahan pakaian dalam yang menyerap keringat dan baik untuk kesehatan reproduksi adalah...","Nilon","Plastik","Katun","Karet",2],
+            ["Untuk mencegah penularan penyakit flu, jika kita bersin sebaiknya...","Dibiarkan saja","Menutup mulut dan hidung dengan lengan/tisu","Bersin ke arah teman","Membuka masker",1],
+            ["Salah satu penyakit yang tidak menular adalah...","Cacar Air","Asma / Jantung koroner","TBC","Influenza",1],
+            ["Narkotika dan Obat-obatan terlarang disingkat menjadi...","NARKOBA / NAPZA","NARTIK","OBATER","NAMTOB",0],
+            ["Orang yang tidak merokok namun ikut menghirup asap rokok dari orang di sekitarnya disebut...","Perokok aktif","Perokok berat","Perokok pasif","Perokok ringan",2],
+            ["Minuman keras (Khamr) sangat berbahaya karena dapat...","Menghilangkan akal sehat (memabukkan)","Meningkatkan konsentrasi","Menyehatkan lambung","Menguatkan otot",0],
+            ["Kunci utama menjaga tubuh agar tetap sehat dan bugar adalah...","Makan junk food tiap hari","Tidur larut malam","Makan bergizi seimbang, istirahat cukup, dan rutin olahraga","Hanya minum obat kuat",2]
+        ];
+        let curr = 0, answers = new Array(50).fill(null), hpMonster = 100;
+        const qNum = document.getElementById('q-num'), qText = document.getElementById('q-text');
+        const optBox = document.getElementById('options-box'), btnSerang = document.getElementById('btn-serang');
+        const barMonster = document.getElementById('hp-monster');
+        function loadQ() {
+            qNum.innerText = `SOAL ${curr + 1} / 50`;
+            qText.innerText = db[curr][0]; optBox.innerHTML = '';
+            for(let i=1; i<=4; i++) {
+                let btn = document.createElement('button'); btn.className = 'opt-btn';
+                if(answers[curr] === i-1) btn.classList.add('selected');
+                btn.innerText = String.fromCharCode(64+i) + ". " + db[curr][i];
+                btn.onclick = () => { answers[curr] = i-1; loadQ(); }; optBox.appendChild(btn);
+            }
+            if(curr === 49) { btnSerang.innerText = "KUMPULKAN! 🔒"; btnSerang.style.background = "#e15f41"; } 
+            else { btnSerang.innerText = "SMASH! 🏸"; btnSerang.style.background = "#10ac84"; }
+        }
+        function prevSoal() { if(curr > 0) { curr--; loadQ(); } }
+        function serang() {
+            if(answers[curr] === null) { alert("Pilih jawaban sebelum memukul, Atlet!"); return; }
+            if(answers[curr] === db[curr][5]) { hpMonster = Math.max(0, hpMonster - 2); barMonster.style.width = hpMonster + "%"; } 
+            else { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 300); }
+            if(curr < 49) { curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat() {
+            let skor = 0; answers.forEach((ans, i) => { if(ans === db[i][5]) skor += 2; });
+            document.getElementById('m-score').innerText = skor;
+            let t = document.getElementById('m-title'), d = document.getElementById('m-desc'), ic = document.getElementById('m-icon');
+            if(skor >= 80) { t.innerText = "SEHAT BUGAR!"; t.style.color = "#10ac84"; ic.innerText = "🏅"; d.innerText = "Teori olahragamu sempurna, Monster Junkfood kalah!"; } 
+            else { t.innerText = "KURANG FIT!"; t.style.color = "#e15f41"; ic.innerText = "🤕"; d.innerText = "Kamu masih sering kecolongan teori dasar. Ayo berlatih lagi!"; document.getElementById('hp-player').style.width = "10%"; }
+            document.getElementById('result-modal').style.display = "flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

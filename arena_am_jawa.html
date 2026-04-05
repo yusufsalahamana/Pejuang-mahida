@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asesmen: B. Jawa</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #3e2723; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #5d4037, #3e2723); padding: 15px; border-bottom: 4px solid #f39c12; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 50%; border: 2px solid #f39c12; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #2c1a14; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #2ecc71; width: 100%; }
+        .monster .hp-bar { background: #c0392b; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; color: #f1c40f;}
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #2c0e0e !important; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #fbf0d9; color: #3e2723; }
+        .q-number { background: #8d6e63; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; border: 2px solid #5d4037;}
+        .q-text { font-size: 20px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #d7ccc8; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-weight: 700; color: #4e342e; transition: 0.1s; }
+        .opt-btn.selected { border-color: #5d4037; background: #d7ccc8; color: #3e2723; }
+        .nav-area { background: #fff8e1; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; border-top: 2px solid #eee; flex-shrink: 0;}
+        .nav-btn { background: #795548; color: white; border: none; padding: 15px 10px; border-radius: 10px; font-family: 'Fredoka One', cursive; font-size: 16px; width: 48%; }
+        .nav-btn.serang { background: #c0392b; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; text-align: center;}
+        .modal-content { background: #fbf0d9; color: #3e2723; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; border: 5px solid #8d6e63; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">👦🏽</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Lare Jawi</div>
+        </div>
+        <div style="font-family:'Fredoka One'; font-size:20px; color:#f1c40f;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">👺</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Buto Ijo</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">PITAKON 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat pertanyaan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" onclick="serang()">WANGSULI! 🗡️</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <h2 id="m-title" style="font-family:'Fredoka One'; color:#c0392b;">SAMPUN RAMPUNG!</h2>
+            <div style="font-size: 60px;">🎭</div>
+            <div style="font-size: 50px; font-weight: 900; color: #2ecc71;" id="m-score">0</div>
+            <p id="m-desc" style="font-weight:700;"></p>
+            <a href="menu_am.html" style="background:#8d6e63; color:white; text-decoration:none; padding:15px; display:block; border-radius:10px; font-family:'Fredoka One'; margin-top:20px;">WANGSUL MENU 🗺️</a>
+        </div>
+    </div>
+    <script>
+        const db = [
+            ["Karangan gancaran sing isine nyritakake kedadean kanthi urut wektu diarani...","Teks Deskripsi","Teks Narasi","Teks Persuasi","Geguritan",1],
+            ["Puisi gagrag anyar ing basa Jawa sing ora kaiket guru gatra, wilangan, lan lagu diarani...","Macapat","Parikan","Geguritan","Cangkriman",2],
+            ["Cacahe tembang macapat kabeh ana...","9","10","11","12",2],
+            ["Cacahing gatra (baris) saben sapada (sebait) ing tembang macapat diarani...","Guru Gatra","Guru Wilangan","Guru Lagu","Guru Swara",0],
+            ["Tibaning swara vokal (a,i,u,e,o) ing pungkasaning gatra diarani...","Guru Wilangan","Guru Gatra","Dhondhing","Guru Lagu",3],
+            ["Tembang macapat 'Pocung' biasane nduweni watak...","Nesu lan seram","Nelangsa","Sembrana parikena (guyonan) / santai","Sedhih",2],
+            ["'Bapak pucung dudu watu dudu gunung...'. Batangane cangkriman iki yaiku...","Gajah","Sepur (Kereta api)","Montor mabur","Kapal",1],
+            ["Paraga utama (Pandhawa) cacahe ana...","3","4","5","100",2],
+            ["Ibune Raden Yudhistira, Werkudara, lan Arjuna yaiku...","Dewi Madrim","Dewi Sinta","Dewi Kunti","Dewi Drupadi",2],
+            ["Satriya penengahing Pandhawa sing kondhang baguse lan pinter manah yaiku...","Yudhistira","Bima","Arjuna","Nakula",2],
+            ["Satriya Jodhipati sing duwe pusaka kuku Pancanaka yaiku...","Werkudara (Bima)","Arjuna","Sadewa","Nakula",0],
+            ["Punakawan sing dadi bapakne lan wujude dewa ngejawantah yaiku...","Gareng","Petruk","Bagong","Semar",3],
+            ["Kurawa iku putrane Prabu Destrarastra sing cacahe ana...","5","10","50","100",3],
+            ["Crita wayang sing nyritakake Prabu Rama nylametake Dewi Sinta saka Rahwana yaiku...","Mahabharata","Ramayana","Sutasoma","Baratayudha",1],
+            ["Perang gedhe antarane Pandhawa lan Kurawa ing Kurusetra diarani...","Perang Diponegoro","Arjuna Wiwaha","Baratayudha","Ramayana",2],
+            ["Unen-unen 'Pitik walik saba kebon' iku klebu cangkriman, batangane yaiku...","Nanas","Salak","Gedhang","Sulak / Kemoceng",0],
+            ["Cangkriman 'Dikethok malah tambah dhuwur' batangane yaiku...","Rambut","Pring","Kathok (Celana)","Kuku",2],
+            ["Basa krama inggile (aluse) tembung 'mangan' kanggo wong tuwa yaiku...","Nedha","Mbadhog","Mangan","Dhahar",3],
+            ["Basa krama aluse tembung 'Adus' yaiku...","Tilem","Siram","Wungu","Kramas",1],
+            ["'Simbah (turu) ing kamar'. Krama aluse tembung 'turu' yaiku...","Tilem","Melek","Sare","Mripat",2],
+            ["'Ibu (lunga) menyang pasar'. Basa krama aluse 'lunga' yaiku...","Tindak","Kesah","Mlampah","Budhal",0],
+            ["'Kowe mau bengi teka jam pira?'. Krama aluse 'teka' yaiku...","Rawuh","Dugi","Wangul","Minggat",0],
+            ["Wong sing dadi panatacara (MC) ing adicara mantenan kudu pinter basa...","Ngoko lugu","Krama inggil (alus)","Krama desa","Ngoko alus",1],
+            ["Aksara Jawa legena cacahe kabeh ana...","15","20","25","30",1],
+            ["Sandhangan 'Wulu' (  ꦶ ) digunakake kanggo menehi swara...","u","e","o","i",3],
+            ["Sandhangan 'Suku' (  ꦸ ) digunakake kanggo menehi swara...","u","i","e","o",0],
+            ["Sandhangan panyigeg wanda kanggo mateni huruf 'r' (mati) diarani...","Cecak","Layar","Pangkon","Wignyan",1],
+            ["Sandhangan panyigeg wanda 'Cecak' minangka sesulih aksara...","h mati","r mati","ng mati","k mati",2],
+            ["Tandha 'Pangkon' ing aksara Jawa fungsine kanggo...","Mateni aksara vokal dadi konsonan ing pungkasan kalimat","Menehi koma","Menehi swara a","Menehi swara i",0],
+            ["Paribasan 'Anak polah bapa ...' bacute yaiku...","Kepradhah","Keleleran","Kesuwen","Kepenak",0],
+            ["Tegese paribasan 'Anak polah bapa kapradhah' yaiku...","Anak sing pinter gawe seneng bapakne","Bapak nesu merga anake nakal","Tingkah polahe anak, wong tuwa melu nanggung akibate","Bapak lan anak padha-padha rukun",2],
+            ["Unen-unen 'Becik ketitik, ala ...'","Keliwat","Ketara","Krasa","Katampa",1],
+            ["Tegese 'Becik ketitik, ala ketara' yaiku...","Wong apik mesti menang","Tumindak apik utawa ala mbesuk bakal konangan (ketahuan)","Wong ala mesti mati","Wong apik mesti sugih",1],
+            ["Tembung saroja yaiku tembung loro sing padha tegese dienggo bebarengan. Tuladhane...","Nagasari","Buku tulis","Bagas waras","Randha royal",2],
+            ["Tembung camboran yaiku tembung loro utawa luwih digandheng dadi siji nuwuhake teges anyar. Tuladhane...","Nagasari (Jajan)","Gagah prakosa","Edi peni","Lega lila",0],
+            ["Tembung entar iku tembung silihan (kiasan). 'Dawa tangane' tegese...","Wong sing lengene dawa","Seneng tetulung","Seneng nyolong (maling)","Seneng salaman",2],
+            ["'Adigang, adigung, adiguna' iku ngemu teges ngendelake...","Rupa bagus lan bandha","Sabar lan ikhlas","Kekuatan, panguwasa, lan kapinteran (kesombongan)","Kekancan",2],
+            ["Crita rakyat sing gegayutan karo asal-usul dumadine panggonan diarani...","Mite","Legenda","Fabel","Sage",1],
+            ["Dongeng sing paragane kewan bisa ngomong kaya manungsa diarani...","Fabel","Mite","Legenda","Babad",0],
+            ["Crita Rawa Pening lan Asal-usul Surabaya klebu jinis crita...","Mite","Fabel","Legenda","Babad",2],
+            ["Pidato basa Jawa uga diarani...","Pranata cara","Sesorah","Khotbah","Geguritan",1],
+            ["Perangan sesorah sing isine salam lan ngucapake syukur marang Gusti Allah diarani...","Surasa basa","Wasana basa","Purwaka basa","Panutup",2],
+            ["Inti utawa isi saka sesorah diarani...","Purwaka basa","Surasa basa","Wasana basa","Pambuka",1],
+            ["Wong sing nglakokake (nyopir) sepur diarani...","Nakhoda","Pilot","Masinis","Sopir",2],
+            ["Papan panggonan kanggo mandheg lan budhale montor mabur (pesawat) yaiku...","Stasiun","Pelabuhan","Terminal","Papan Anggegana (Bandara)",3],
+            ["Panggonan kanggo mandheg sepur diarani...","Stasiun","Halte","Bandara","Pelabuhan",0],
+            ["Kosok balene (lawan kata) tembung 'Dhuwur' yaiku...","Amba","Cendhak / Endhek","Gedhe","Bagus",1],
+            ["Kosok balene tembung 'Bungah' (Seneng) yaiku...","Geguyu","Lega","Susah / Sedhih","Gumbira",2],
+            ["Crita Ramayana asale saka negara...","Tiongkok","India","Mesir","Arab",1],
+            ["Senjata cakra iku duweke ratu Dwarawati yaiku...","Prabu Kresna","Raden Arjuna","Prabu Salya","Prabu Puntadewa",0]
+        ];
+        let curr = 0, userAns = new Array(50).fill(null), hpM = 100;
+        function loadQ(){
+            document.getElementById('q-num').innerText = `PITAKON ${curr+1} / 50`;
+            document.getElementById('q-text').innerText = db[curr][0];
+            const box = document.getElementById('options-box'); box.innerHTML = '';
+            for(let i=1;i<=4;i++){
+                let b = document.createElement('button'); b.className = 'opt-btn';
+                if(userAns[curr]===i-1) b.classList.add('selected');
+                b.innerText = String.fromCharCode(64+i)+". "+db[curr][i];
+                b.onclick = ()=>{ userAns[curr]=i-1; loadQ(); }; box.appendChild(b);
+            }
+        }
+        function prevSoal(){ if(curr>0){ curr--; loadQ(); } }
+        function serang(){
+            if(userAns[curr]===null){ alert("Pilih wangsulanmu (jawaban) luwih dhisik!"); return; }
+            if(userAns[curr]===db[curr][5]){ hpM=Math.max(0,hpM-2); document.getElementById('hp-monster').style.width=hpM+"%"; }
+            else { document.body.classList.add('shake'); setTimeout(()=>document.body.classList.remove('shake'),300); }
+            if(curr<49){ curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat(){
+            let s = 0; userAns.forEach((a,i)=>{ if(a===db[i][5]) s+=2; });
+            document.getElementById('m-score').innerText = s;
+            let t = document.getElementById('m-title'), d = document.getElementById('m-desc'), ic = document.getElementById('m-icon');
+            if(s >= 80) { t.innerText = "SAMPUN RAMPUNG!"; t.style.color = "#2ecc71"; ic.innerText = "🏆"; d.innerText = "Awakmu pancen lare Jawa sing pinter!"; } 
+            else { t.innerText = "KURANG SREGEP"; t.style.color = "#c0392b"; ic.innerText = "👺"; d.innerText = "Aja nganti lali basane dhewe, sinau maneh ya!"; document.getElementById('hp-player').style.width = "10%"; }
+            document.getElementById('result-modal').style.display="flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

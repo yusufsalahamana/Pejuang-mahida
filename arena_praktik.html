@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pulau 4: Asesmen Praktik</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #d35400; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* HEADER PADEPOKAN */
+        .header-padepokan { background: linear-gradient(to bottom, #e67e22, #d35400); padding: 20px 15px; display: flex; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 10; border-bottom: 4px solid #f1c40f; flex-shrink: 0;}
+        .back-btn { background: #c0392b; color: white; text-decoration: none; padding: 8px 12px; border-radius: 10px; font-weight: 900; box-shadow: 0 4px 0 #922b21; margin-right: 15px; font-size: 14px;}
+        .back-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #922b21; }
+        .header-title { flex-grow: 1; text-align: center; margin-right: 40px; }
+        .header-title h1 { font-family: 'Fredoka One', cursive; margin: 0; font-size: 22px; color: #fff; text-shadow: 2px 2px 0 #a04000; }
+        .header-title p { margin: 2px 0 0 0; font-size: 12px; font-weight: 900; color: #f1c40f;}
+
+        /* AREA QUEST (MISI) */
+        .quest-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #fdf2e9; color: #333; }
+        
+        .quest-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-left: 6px solid #e67e22; transition: 0.3s; }
+        .quest-card.completed { border-left-color: #2ecc71; background: #eafaf1; }
+        .quest-card.completed .quest-title { color: #27ae60; text-decoration: line-through; }
+        
+        .quest-header { display: flex; align-items: center; margin-bottom: 15px; }
+        .quest-icon { font-size: 30px; margin-right: 15px; background: #fae5d3; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; border-radius: 12px; flex-shrink: 0;}
+        .quest-title { font-family: 'Fredoka One', cursive; font-size: 17px; color: #d35400; margin: 0; }
+        .quest-desc { font-size: 13px; color: #7f8c8d; margin: 5px 0 0 0; line-height: 1.4;}
+        
+        .action-btn { width: 100%; background: #e67e22; color: white; border: none; padding: 12px; border-radius: 10px; font-family: 'Fredoka One', cursive; font-size: 15px; margin-top: 10px; transition: 0.2s; box-shadow: 0 4px 0 #d35400;}
+        .action-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #d35400; }
+        .action-btn.done { background: #2ecc71; box-shadow: none; pointer-events: none; }
+        
+        /* SIMULASI RECORDING (MIC) */
+        .mic-btn { background: #e74c3c; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; border: none; color: white; margin: 10px auto; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 0 #c0392b; transition: 0.2s; user-select: none;}
+        .mic-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #c0392b; }
+        .mic-btn.recording { animation: pulse 1s infinite; background: #c0392b; box-shadow: none; transform: scale(0.95);}
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
+
+        /* FOOTER PROGRESS */
+        .footer-progress { background: white; padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 10; text-align: center; flex-shrink: 0; }
+        .progress-bar-bg { width: 100%; height: 15px; background: #ecf0f1; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+        .progress-bar { width: 0%; height: 100%; background: #2ecc71; transition: 0.5s; }
+        .finish-btn { background: #bdc3c7; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-family: 'Fredoka One', cursive; font-size: 16px; pointer-events: none; transition: 0.3s;}
+        .finish-btn.ready { background: #2ecc71; pointer-events: auto; box-shadow: 0 5px 0 #27ae60; cursor: pointer; }
+        .finish-btn.ready:active { transform: translateY(5px); box-shadow: 0 0 0 #27ae60; }
+        
+        /* MODAL HASIL */
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; text-align: center;}
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; max-width: 400px; width: 100%; border: 5px solid #2ecc71; }
+    </style>
+</head>
+<body>
+
+    <div class="header-padepokan">
+        <a href="index.html" class="back-btn">⬅️ PETA</a>
+        <div class="header-title">
+            <h1>PADEPOKAN PRAKTIK</h1>
+            <p>Simulasi Ujian Performa</p>
+        </div>
+    </div>
+
+    <div class="quest-area">
+        <div class="quest-card" id="q1">
+            <div class="quest-header">
+                <div class="quest-icon">💧</div>
+                <div>
+                    <h2 class="quest-title">Misi 1: Praktik Wudu</h2>
+                    <p class="quest-desc">Lakukan urutan wudu dengan tertib dan benar beserta doanya.</p>
+                </div>
+            </div>
+            <button class="action-btn" id="btn1" onclick="completeQuest(1)">SAYA SUDAH BISA ✔️</button>
+        </div>
+
+        <div class="quest-card" id="q2">
+            <div class="quest-header">
+                <div class="quest-icon">🧎🏽‍♂️</div>
+                <div>
+                    <h2 class="quest-title">Misi 2: Praktik Salat</h2>
+                    <p class="quest-desc">Peragakan gerakan dan bacaan salat Subuh lengkap (termasuk Qunut).</p>
+                </div>
+            </div>
+            <button class="action-btn" id="btn2" onclick="completeQuest(2)">SAYA SUDAH BISA ✔️</button>
+        </div>
+
+        <div class="quest-card" id="q3">
+            <div class="quest-header">
+                <div class="quest-icon">📖</div>
+                <div>
+                    <h2 class="quest-title">Misi 3: Hafalan Surah</h2>
+                    <p class="quest-desc">Baca QS. Al-Ghasyiyah tanpa melihat mushaf. (Tahan ikon mic di bawah selama 3 detik untuk simulasi penyetoran)</p>
+                </div>
+            </div>
+            <div class="mic-btn" id="mic3" onmousedown="startRecord(3)" onmouseup="stopRecord(3)" onmouseleave="stopRecord(3)" ontouchstart="startRecord(3)" ontouchend="stopRecord(3)">🎙️</div>
+            <div id="status3" style="text-align:center; font-size:12px; font-weight:bold; color:#e74c3c; margin-top:5px;">Tahan tombol untuk setor hafalan...</div>
+        </div>
+
+        <div class="quest-card" id="q4">
+            <div class="quest-header">
+                <div class="quest-icon">🤲</div>
+                <div>
+                    <h2 class="quest-title">Misi 4: Hafalan Doa</h2>
+                    <p class="quest-desc">Baca Doa Sesudah Makan dan Doa Masuk Masjid. (Tahan ikon mic di bawah selama 3 detik)</p>
+                </div>
+            </div>
+            <div class="mic-btn" id="mic4" onmousedown="startRecord(4)" onmouseup="stopRecord(4)" onmouseleave="stopRecord(4)" ontouchstart="startRecord(4)" ontouchend="stopRecord(4)">🎙️</div>
+            <div id="status4" style="text-align:center; font-size:12px; font-weight:bold; color:#e74c3c; margin-top:5px;">Tahan tombol untuk setor doa...</div>
+        </div>
+
+        <div class="quest-card" id="q5">
+            <div class="quest-header">
+                <div class="quest-icon">🏃‍♂️</div>
+                <div>
+                    <h2 class="quest-title">Misi 5: Praktik PJOK</h2>
+                    <p class="quest-desc">Lakukan pemanasan, lalu praktikkan gerakan Roll Depan di atas matras.</p>
+                </div>
+            </div>
+            <button class="action-btn" id="btn5" onclick="completeQuest(5)">SAYA SUDAH BISA ✔️</button>
+        </div>
+    </div>
+
+    <div class="footer-progress">
+        <div style="font-weight:900; color:#d35400; margin-bottom:5px; font-size:14px;" id="progress-text">Progres: 0 / 5 Misi Selesai</div>
+        <div class="progress-bar-bg"><div class="progress-bar" id="progress-bar"></div></div>
+        <button class="finish-btn" id="finish-btn" onclick="tamat()">TEMUI PENGUJI 📜</button>
+    </div>
+
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <div style="font-family: 'Fredoka One', cursive; font-size: 24px; color: #27ae60; margin-bottom: 10px;">LULUS PRAKTIK!</div>
+            <div style="font-size: 60px;">🎓</div>
+            <p style="font-weight:700; font-size:14px; line-height:1.5;">Alhamdulillah! Semua misi performa telah kamu selesaikan. Kamu 100% siap menghadapi Ujian Kelulusan Madrasah!</p>
+            <a href="index.html" style="background: #2ecc71; color: white; text-decoration: none; padding: 15px; border-radius: 10px; display: block; font-family: 'Fredoka One', cursive; margin-top: 20px; box-shadow: 0 4px 0 #27ae60;">KLAIM IJAZAHMU 📜</a>
+        </div>
+    </div>
+
+    <script>
+        let completed = 0;
+        let isRecording = false;
+        let recordTimer;
+        let missionStatus = {1:false, 2:false, 3:false, 4:false, 5:false};
+
+        function completeQuest(id) {
+            if(missionStatus[id]) return;
+            missionStatus[id] = true;
+            document.getElementById('q' + id).classList.add('completed');
+            
+            let btn = document.getElementById('btn' + id);
+            if(btn) {
+                btn.innerText = "SELESAI ✅";
+                btn.classList.add('done');
+            }
+            updateProgress();
+        }
+
+        // Fungsi Tahan Tombol Mic untuk Hafalan
+        function startRecord(id) {
+            if(missionStatus[id]) return; // Jika sudah selesai, abaikan
+            isRecording = true;
+            let micBtn = document.getElementById('mic' + id);
+            let statusText = document.getElementById('status' + id);
+            
+            micBtn.classList.add('recording');
+            statusText.innerText = "Merekam suara... Tahan terus!";
+            statusText.style.color = "#d35400";
+            
+            // Tahan 2.5 detik untuk simulasi setor hafalan sukses
+            recordTimer = setTimeout(() => {
+                if(isRecording) {
+                    completeQuest(id);
+                    statusText.innerText = "Hafalan Diterima ✅";
+                    statusText.style.color = "#27ae60";
+                    micBtn.style.background = "#2ecc71";
+                    micBtn.classList.remove('recording');
+                    micBtn.innerText = "✅";
+                }
+            }, 2500);
+        }
+
+        function stopRecord(id) {
+            if(!isRecording) return;
+            isRecording = false;
+            clearTimeout(recordTimer);
+            
+            let micBtn = document.getElementById('mic' + id);
+            let statusText = document.getElementById('status' + id);
+            
+            micBtn.classList.remove('recording');
+            
+            if(!missionStatus[id]) {
+                statusText.innerText = "Gagal! Tahan tombol sampai selesai.";
+                statusText.style.color = "#e74c3c";
+            }
+        }
+
+        function updateProgress() {
+            completed = Object.values(missionStatus).filter(status => status === true).length;
+            let percent = (completed / 5) * 100;
+            document.getElementById('progress-bar').style.width = percent + "%";
+            document.getElementById('progress-text').innerText = `Progres: ${completed} / 5 Misi Selesai`;
+
+            if(completed === 5) {
+                let finishBtn = document.getElementById('finish-btn');
+                finishBtn.classList.add('ready');
+                finishBtn.innerText = "TEMUI PENGUJI 📜";
+            }
+        }
+
+        function tamat() {
+            document.getElementById('result-modal').style.display = "flex";
+        }
+    </script>
+</body>
+</html>

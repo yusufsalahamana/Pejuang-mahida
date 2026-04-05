@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asesmen: Aqidah Akhlak</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #2c2c54; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #40407a, #2c2c54); padding: 15px; border-bottom: 4px solid #ffb142; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 50%; border: 2px solid #ffb142; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #33d9b2; width: 100%; }
+        .monster .hp-bar { background: #ff5252; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; color: #ffb142; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #1a1a3a !important; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #f1f2f6; color: #2c2c54; }
+        .q-number { background: #474787; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 18px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #aaa69d; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-weight: 700; color: #2c2c54; }
+        .opt-btn.selected { border-color: #474787; background: #d1d1e9; }
+        .nav-area { background: white; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; border-top: 2px solid #eee; }
+        .nav-btn { background: #706fd3; color: white; border: none; padding: 15px; border-radius: 10px; font-family: 'Fredoka One', cursive; width: 48%; }
+        .nav-btn.serang { background: #ffb142; color: #2c2c54; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 5px solid #ffb142; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">🤲</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Santri Saleh</div>
+        </div>
+        <div style="font-family:'Fredoka One'; color:#ffb142;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">😈</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Jin Sombong</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">DZIKIR 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat pertanyaan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" onclick="serang()">TAWAKAL! ✨</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <h2 style="font-family:'Fredoka One'; color:#40407a;">AMALAN SELESAI</h2>
+            <div style="font-size: 60px;">🌟</div>
+            <div style="font-size: 50px; font-weight: 900; color: #33d9b2;" id="m-score">0</div>
+            <p id="m-desc" style="font-weight:700;"></p>
+            <a href="menu_am.html" style="background:#40407a; color:white; text-decoration:none; padding:15px; display:block; border-radius:10px; font-family:'Fredoka One'; margin-top:20px;">KEMBALI</a>
+        </div>
+    </div>
+    <script>
+        const db = [
+            ["Kalimat Thayyibah 'Subhanallah' diucapkan ketika melihat...","Keindahan ciptaan Allah","Kejadian yang menyedihkan","Sesuatu yang menakjubkan/aneh","Keberhasilan diri",2],
+            ["Masya Allah artinya adalah...","Maha Suci Allah","Segala puji bagi Allah","Atas kehendak Allah","Allah Maha Besar",2],
+            ["Kalimat 'Hasbunallah wani'mal wakil' artinya...","Allah Maha Pengampun","Cukuplah Allah menjadi penolong kami","Segala puji bagi Allah Tuhan semesta alam","Tiada daya dan upaya kecuali dari Allah",1],
+            ["Istighfar adalah kalimat memohon...","Rezeki","Pertolongan","Ampunan","Kesehatan",2],
+            ["Nama-nama Allah yang baik dan indah disebut...","Asmaul Husna","Sifat Wajib","Sifat Jaiz","Mu'jizat",0],
+            ["Al-Latif artinya Allah Maha...","Melihat","Mendengar","Lembut","Adil",2],
+            ["Allah Maha Pengampun adalah arti dari Asmaul Husna...","Al-Ghaffar","Al-Basir","Al-Aziz","Ar-Rahman",0],
+            ["Al-Hayyu artinya Allah Maha...","Mati","Hidup","Kuat","Esa",1],
+            ["Sifat yang pasti ada pada Allah SWT disebut sifat...","Mustahil","Jaiz","Wajib","Mulia",2],
+            ["Sifat wajib Allah 'Wujud' artinya...","Ada","Terdahulu","Kekal","Berbeda",0],
+            ["Allah SWT mustahil bersifat 'Fana'. Fana artinya...","Ada","Rusak/Binasa","Bodoh","Bisu",1],
+            ["Sifat Jaiz Allah hanya ada satu, yaitu...","Allah harus menciptakan makhluk","Allah berwenang menciptakan atau tidak menciptakan sesuatu","Allah wajib memberi rezeki","Allah tidak boleh tidur",1],
+            ["Nabi dan Rasul yang wajib diketahui berjumlah...","10","20","25","313",2],
+            ["Sifat wajib Rasul 'Siddiq' artinya...","Dapat dipercaya","Benar/Jujur","Menyampaikan","Cerdas",1],
+            ["Fathanah adalah sifat Rasul yang artinya...","Pemaaf","Cerdas","Kuat","Sabar",1],
+            ["Sifat mustahil bagi Rasul 'Kizib' artinya...","Bohong","Khianat","Bodoh","Sembunyi",0],
+            ["Nabi yang mendapat julukan bapak para Nabi (Abul Anbiya) adalah...","Nabi Adam","Nabi Ibrahim","Nabi Muhammad","Nabi Nuh",1],
+            ["Kejadian luar biasa yang diberikan Allah kepada para Nabi disebut...","Karamah","Ma'unah","Irhasi","Mu'jizat",3],
+            ["Nabi yang memiliki mu'jizat dapat berbicara dengan hewan adalah...","Nabi Sulaiman","Nabi Ibrahim","Nabi Musa","Nabi Isa",0],
+            ["Mu'jizat Nabi Musa AS yang paling terkenal adalah...","Membelah bulan","Membelah laut Merah dengan tongkat","Tidak hangus dibakar","Menghidupkan orang mati",1],
+            ["Nabi Muhammad SAW adalah penutup para Nabi, yang disebut...","Ulul Azmi","Khatamun Nabiyyin","Khalilullah","Rahmatan lil 'Alamin",1],
+            ["Nabi yang termasuk golongan Ulul Azmi berjumlah...","3","4","5","6",2],
+            ["Rasul Ulul Azmi adalah rasul yang memiliki ... yang luar biasa.","Kekayaan","Kesabaran dan Ketabahan","Pasukan","Ilmu",1],
+            ["Kitab suci yang diturunkan kepada Nabi Daud AS adalah...","Taurat","Zabur","Injil","Al-Qur'an",1],
+            ["Kitab Taurat diturunkan kepada Nabi...","Musa AS","Isa AS","Ibrahim AS","Ismail AS",0],
+            ["Iman kepada Hari Kiamat termasuk rukun iman ke...","3","4","5","6",2],
+            ["Hari dibangkitkannya manusia dari alam kubur disebut Yaumul...","Ba'ats","Mahsyar","Mizan","Hisab",0],
+            ["Yaumul Mizan adalah hari dimana amal manusia akan...","Dihitung","Ditimbang","Dilihat","Dihapus",1],
+            ["Akhlak terpuji disebut juga akhlak...","Mazmumah","Mahmudah","Sayyi'ah","Batil",1],
+            ["Akhlak tercela disebut juga akhlak...","Mahmudah","Mazmumah","Karimah","Tayyibah",1],
+            ["Sikap mengakui kekurangan diri dan tidak sombong disebut...","Tawadhu","Takabur","Riya","Sum'ah",0],
+            ["Sifat pamer dalam beribadah disebut...","Nifaq","Riya","Siddiq","Amanah",1],
+            ["Hubbud Dunya artinya...","Cinta kepada Allah","Cinta kepada sesama","Cinta dunia yang berlebihan","Benci dunia",2],
+            ["Hasad adalah sikap tercela yang artinya...","Sombong","Dengki/Iri hati","Suka pamer","Suka bohong",1],
+            ["Kebalikan dari sifat syukur adalah...","Kikir","Kufur","Sabar","Ikhlas",1],
+            ["Adab kepada orang tua yang benar adalah...","Bicara dengan nada tinggi","Membentak jika kesal","Mendoakan dan patuh selama tidak maksiat","Mengabaikan perintahnya",2],
+            ["Bicara yang baik atau diam merupakan ciri orang...","Beriman","Penakut","Sombong","Pemalu",0],
+            ["Menjaga rahasia teman merupakan perwujudan sifat...","Adil","Amanah","Sabar","Berani",1],
+            ["Sifat Allah Al-Ahad menunjukkan bahwa Allah itu...","Maha Besar","Maha Pengasih","Maha Esa","Maha Kuasa",2],
+            ["Sifat wajib Qiyamuhu Binafsihi artinya Allah berdiri...","Dengan bantuan malaikat","Dengan bantuan manusia","Sendiri","Di atas arsy",2],
+            ["Zuhud artinya...","Mencintai harta","Tidak terpedaya oleh kemewahan dunia","Menabung terus","Malas bekerja",1],
+            ["Tanda-tanda kiamat Sugra (kecil) contohnya...","Matahari terbit dari barat","Munculnya Dajjal","Banyak terjadi bencana alam dan kemaksiatan","Turunnya Nabi Isa",2],
+            ["Malaikat yang bertugas meniup sangkakala adalah...","Jibril","Mikail","Israfil","Izrail",2],
+            ["Malaikat Munkar dan Nakir bertugas menanyai manusia di...","Padang Mahsyar","Alam Barzakh/Kubur","Surga","Neraka",1],
+            ["Adab bertamu yang benar adalah mengetuk pintu maksimal...","1 kali","2 kali","3 kali","5 kali",2],
+            ["Jika janji tidak ditepati, maka ia termasuk ciri orang...","Soleh","Munafik","Sabar","Kuat",1],
+            ["Anak yang durhaka kepada orang tua disebut...","Birrul Walidain","Uququl Walidain","Yatim Piatu","Anak Saleh",1],
+            ["Surga dipenuhi oleh orang-orang yang...","Kaya raya","Banyak bicara","Bertakwa dan Beramal Saleh","Sombong",2],
+            ["Neraka adalah tempat balasan bagi orang yang...","Miskin","Pendosa dan Ingkar kepada Allah","Sakit","Lupa",1],
+            ["Aqidah Islam bersumber dari...","Hati nurani","Buku cerita","Al-Qur'an dan Hadis","Mimpi",2]
+        ];
+        let curr = 0, userAns = new Array(50).fill(null), hpM = 100;
+        function loadQ(){
+            document.getElementById('q-num').innerText = `DZIKIR ${curr+1} / 50`;
+            document.getElementById('q-text').innerText = db[curr][0];
+            const box = document.getElementById('options-box'); box.innerHTML = '';
+            for(let i=1;i<=4;i++){
+                let b = document.createElement('button'); b.className = 'opt-btn';
+                if(userAns[curr]===i-1) b.classList.add('selected');
+                b.innerText = String.fromCharCode(64+i)+". "+db[curr][i];
+                b.onclick = ()=>{ userAns[curr]=i-1; loadQ(); }; box.appendChild(b);
+            }
+        }
+        function prevSoal(){ if(curr>0){ curr--; loadQ(); } }
+        function serang(){
+            if(userAns[curr]===null){ alert("Isi amalan (jawaban) dulu!"); return; }
+            if(userAns[curr]===db[curr][5]){ hpM=Math.max(0,hpM-2); document.getElementById('hp-monster').style.width=hpM+"%"; }
+            else { document.body.classList.add('shake'); setTimeout(()=>document.body.classList.remove('shake'),300); }
+            if(curr<49){ curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat(){
+            let s = 0; userAns.forEach((a,i)=>{ if(a===db[i][5]) s+=2; });
+            document.getElementById('m-score').innerText = s;
+            document.getElementById('m-desc').innerText = s>=75?"Masyallah! Aqidahmu kokoh dan Akhlakmu terpuji.":"Teruslah belajar dan perbaiki diri, Nak.";
+            document.getElementById('result-modal').style.display="flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

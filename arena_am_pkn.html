@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asesmen: PKn</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #b33939; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #d63031, #b33939); padding: 15px; border-bottom: 4px solid #f1c40f; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; border: 2px solid #fff; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #2ecc71; width: 100%; }
+        .monster .hp-bar { background: #ff793f; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #4b0000 !important; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #f7f1e3; color: #2c3e50; }
+        .q-number { background: #d63031; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 18px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #d1ccc0; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-weight: 700; color: #2c3e50; }
+        .opt-btn.selected { border-color: #d63031; background: #ffb8b8; }
+        .nav-area { background: white; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; border-top: 2px solid #eee; }
+        .nav-btn { background: #84817a; color: white; border: none; padding: 15px; border-radius: 10px; font-family: 'Fredoka One', cursive; width: 48%; }
+        .nav-btn.serang { background: #d63031; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 5px solid #d63031; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">🇮🇩</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Pendekar Muda</div>
+        </div>
+        <div style="font-family:'Fredoka One'; color:#f1c40f;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">👹</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Monster Perpecahan</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">SILA 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat pertanyaan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" onclick="serang()">BERSATU! 🦅</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <h2 style="font-family:'Fredoka One'; color:#d63031;">MISI TUNTAS!</h2>
+            <div style="font-size: 60px;">🏆</div>
+            <div style="font-size: 50px; font-weight: 900; color: #2ecc71;" id="m-score">0</div>
+            <p id="m-desc" style="font-weight:700;"></p>
+            <a href="menu_am.html" style="background:#d63031; color:white; text-decoration:none; padding:15px; display:block; border-radius:10px; font-family:'Fredoka One'; margin-top:20px;">KEMBALI</a>
+        </div>
+    </div>
+    <script>
+        const db = [
+            ["Dasar negara Indonesia adalah...","UUD 1945","Pancasila","Burung Garuda","Bhinneka Tunggal Ika",1],
+            ["Lambang sila pertama Pancasila adalah...","Rantai","Pohon Beringin","Bintang","Padi dan Kapas",2],
+            ["Rantai emas merupakan lambang Pancasila sila ke...","1","2","3","4",1],
+            ["Sila 'Persatuan Indonesia' dilambangkan dengan gambar...","Kepala Banteng","Pohon Beringin","Bintang","Padi dan Kapas",1],
+            ["Menghormati teman yang sedang beribadah merupakan pengamalan sila ke...","1","2","3","4",0],
+            ["Keputusan yang diambil dalam musyawarah harus mengutamakan kepentingan...","Pribadi","Ketua","Bersama","Golongan",2],
+            ["Lambang negara Indonesia adalah...","Pancasila","Bendera Merah Putih","Burung Garuda Pancasila","UUD 1945",2],
+            ["Bhinneka Tunggal Ika artinya...","Bersatu kita teguh","Berbeda-beda tetapi tetap satu jua","Berani karena benar","Pantang menyerah",1],
+            ["Kalimat Bhinneka Tunggal Ika diambil dari kitab Sutasoma karangan...","Empu Gandring","Empu Prapanca","Empu Tantular","Empu Sedah",2],
+            ["Salah satu kewajiban anak di rumah adalah...","Mendapatkan uang jajan","Membantu orang tua","Mendapat perlindungan","Bermain sepuasnya",1],
+            ["Mendapatkan pendidikan dan pengajaran merupakan ... siswa.","Kewajiban","Tanggung jawab","Hak","Hadiah",2],
+            ["Segala sesuatu yang harus dilaksanakan dengan penuh tanggung jawab disebut...","Hak","Hobi","Kewajiban","Wewenang",2],
+            ["Kewajiban warga negara dalam menjaga kebersihan lingkungan contohnya...","Membuang sampah ke sungai","Kerja bakti membersihkan selokan","Menanam pohon di rumah sendiri saja","Melihat orang lain menyapu",1],
+            ["Hak warga negara Indonesia diatur dalam UUD 1945 pasal...","27 sampai 34","1 sampai 10","35 sampai 40","21 sampai 25",0],
+            ["Pihak yang wajib menjaga keamanan lingkungan sekolah adalah...","Satpam saja","Kepala sekolah saja","Guru saja","Seluruh warga sekolah",3],
+            ["Contoh sikap cinta tanah air adalah...","Menggunakan produk luar negeri","Mempelajari budaya daerah sendiri","Mencela budaya suku lain","Malas mengikuti upacara bendera",1],
+            ["Sumpah Pemuda dibacakan pada tanggal...","17 Agustus 1945","28 Oktober 1928","10 November 1945","1 Juni 1945",1],
+            ["Lagu kebangsaan Indonesia Raya diciptakan oleh...","Ibu Sud","Ismail Marzuki","W.R. Supratman","Kusbini",2],
+            ["Warna bendera Indonesia adalah merah putih. Merah artinya...","Suci","Berani","Abadi","Indah",1],
+            ["Ibu kota negara Indonesia saat ini adalah...","Surabaya","Bandung","Jakarta","Nusantara (IKN)",2],
+            ["Lembaga yang bertugas membuat undang-undang adalah...","Eksekutif","Legislatif (DPR)","Yudikatif","Federatif",1],
+            ["Presiden dan Wakil Presiden termasuk dalam lembaga...","Legislatif","Yudikatif","Eksekutif","Eksaminatif",2],
+            ["Lembaga yudikatif yang bertugas mengadili pelanggaran hukum adalah...","DPR","Presiden","MA dan MK","KPK",2],
+            ["Kepala daerah tingkat kabupaten disebut...","Gubernur","Wali Kota","Bupati","Camat",2],
+            ["Wilayah kecamatan dipimpin oleh seorang...","Lurah","Kepala Desa","Camat","Bupati",2],
+            ["Organisasi internasional yang diikuti negara-negara di Asia Tenggara adalah...","PBB","APEC","ASEAN","G20",2],
+            ["ASEAN didirikan pada tanggal 8 Agustus 1967 di kota...","Jakarta","Manila","Singapura","Bangkok",3],
+            ["Wakil dari Indonesia yang ikut menandatangani Deklarasi Bangkok adalah...","Adam Malik","Tun Abdul Razak","S. Rajaratnam","Narciso Ramos",0],
+            ["Salah satu tujuan berdirinya ASEAN adalah...","Membentuk pakta militer","Meningkatkan pertumbuhan ekonomi dan sosial","Menguasai negara tetangga","Menghapus pajak",1],
+            ["Negara di Asia Tenggara yang tidak pernah dijajah adalah...","Indonesia","Malaysia","Thailand","Vietnam",2],
+            ["Persatuan dan kesatuan sangat penting karena Indonesia memiliki...","Satu suku saja","Lahan yang sempit","Keragaman suku, agama, dan budaya","Hanya satu pulau",2],
+            ["Sikap yang dapat merusak persatuan adalah...","Toleransi","Egoisme/Menang sendiri","Gotong royong","Menghargai perbedaan",1],
+            ["Gotong royong merupakan ciri khas bangsa Indonesia yang sesuai dengan Pancasila sila ke...","2","3","4","5",1],
+            ["Menghargai pendapat orang lain saat diskusi adalah contoh pengamalan sila ke...","2","3","4","5",2],
+            ["Nilai juang para pahlawan yang patut diteladani adalah...","Rela berkorban demi bangsa","Mencari kekayaan","Ingin dipuji","Takut kepada musuh",0],
+            ["Pemilihan Umum (Pemilu) di Indonesia dilaksanakan setiap...","3 tahun sekali","4 tahun sekali","5 tahun sekali","6 tahun sekali",2],
+            ["Asas Pemilu di Indonesia adalah Luber Jurdil. 'Lub' artinya...","Lurus","Luwes","Langsung","Luhur",2],
+            ["Menteri-menteri dalam pemerintahan diangkat dan diberhentikan oleh...","DPR","Presiden","Wakil Presiden","Rakyat",1],
+            ["Pajak yang kita bayar kepada negara digunakan untuk...","Gaji pejabat saja","Pembangunan fasilitas umum","Membeli senjata perang saja","Membayar hutang pribadi",1],
+            ["Norma yang bersumber dari hati nurani manusia disebut norma...","Agama","Kesopanan","Kesusilaan","Hukum",2],
+            ["Meludah di sembarang tempat merupakan pelanggaran norma...","Hukum","Kesopanan","Agama","Kesusilaan",1],
+            ["Sanksi bagi orang yang melanggar hukum adalah...","Dosa","Dicemooh masyarakat","Denda atau Penjara","Merasa bersalah",2],
+            ["Hak asasi manusia berlaku untuk...","Warga kaya saja","Anak-anak saja","Semua manusia tanpa terkecuali","Orang dewasa saja",2],
+            ["Contoh tanggung jawab siswa terhadap lingkungan adalah...","Membiarkan kran air menyala","Membuang sampah pada tempatnya","Mencoret-coret meja","Merusak tanaman sekolah",1],
+            ["Indonesia adalah negara hukum. Hal ini ditegaskan dalam UUD 1945 pasal...","1 ayat 1","1 ayat 2","1 ayat 3","2 ayat 1",2],
+            ["Lembaga yang wajib menjaga kedaulatan wilayah NKRI adalah...","Polisi","TNI","KPK","DPR",1],
+            ["Pakaian adat dari Jawa Timur adalah...","Kebaya dan Pesa'an","Ulos","Baju Bodo","Ewer",0],
+            ["Rumah adat dari Papua disebut...","Joglo","Gadang","Honai","Tongkonan",2],
+            ["Sikap kita jika melihat teman yang berbeda suku sedang kesulitan adalah...","Membiarkannya","Menolongnya dengan ikhlas","Menertawakannya","Mencari bantuan orang sesuku saja",1],
+            ["Kedaulatan di tangan rakyat dan dilakukan menurut UUD. Ini adalah prinsip...","Monarki","Diktator","Demokrasi","Oligarki",2]
+        ];
+        let curr = 0, userAns = new Array(50).fill(null), hpM = 100;
+        function loadQ(){
+            document.getElementById('q-num').innerText = `SILA ${curr+1} / 50`;
+            document.getElementById('q-text').innerText = db[curr][0];
+            const box = document.getElementById('options-box'); box.innerHTML = '';
+            for(let i=1;i<=4;i++){
+                let b = document.createElement('button'); b.className = 'opt-btn';
+                if(userAns[curr]===i-1) b.classList.add('selected');
+                b.innerText = String.fromCharCode(64+i)+". "+db[curr][i];
+                b.onclick = ()=>{ userAns[curr]=i-1; loadQ(); }; box.appendChild(b);
+            }
+        }
+        function prevSoal(){ if(curr>0){ curr--; loadQ(); } }
+        function serang(){
+            if(userAns[curr]===null){ alert("Pilih jawabanmu, Patriot!"); return; }
+            if(userAns[curr]===db[curr][5]){ hpM=Math.max(0,hpM-2); document.getElementById('hp-monster').style.width=hpM+"%"; }
+            else { document.body.classList.add('shake'); setTimeout(()=>document.body.classList.remove('shake'),300); }
+            if(curr<49){ curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat(){
+            let s = 0; userAns.forEach((a,i)=>{ if(a===db[i][5]) s+=2; });
+            document.getElementById('m-score').innerText = s;
+            document.getElementById('m-desc').innerText = s>=75?"Luar biasa! Persatuan terjaga, Indonesia jaya!":"Belajar lagi ya, agar menjadi warga negara yang baik.";
+            document.getElementById('result-modal').style.display="flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

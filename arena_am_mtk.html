@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asesmen: Matematika</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #192a56; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #273c75, #192a56); padding: 15px; border-bottom: 4px solid #e1b12c; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; border: 2px solid #e1b12c; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #44bd32; width: 100%; }
+        .monster .hp-bar { background: #c23616; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; color: #f5f6fa;}
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #400000 !important; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #f5f6fa; color: #192a56; }
+        .q-number { background: #273c75; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 18px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #dcdde1; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-weight: 700; color: #2f3640; }
+        .opt-btn.selected { border-color: #273c75; background: #dff9fb; }
+        .nav-area { background: white; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; border-top: 2px solid #eee; }
+        .nav-btn { background: #718093; color: white; border: none; padding: 15px; border-radius: 10px; font-family: 'Fredoka One', cursive; width: 48%; }
+        .nav-btn.serang { background: #e1b12c; color: #192a56; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 5px solid #273c75; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">👨‍🔬</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Ahli Hitung</div>
+        </div>
+        <div style="font-family:'Fredoka One'; color:#e1b12c;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">🧮</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Monster Rumus</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">ANGKA 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat hitungan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" onclick="serang()">JAWAB! 📐</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <h2 style="font-family:'Fredoka One'; color:#273c75;">HITUNGAN AKURAT!</h2>
+            <div style="font-size: 60px;">🏆</div>
+            <div style="font-size: 50px; font-weight: 900; color: #44bd32;" id="m-score">0</div>
+            <p id="m-desc" style="font-weight:700;"></p>
+            <a href="menu_am.html" style="background:#273c75; color:white; text-decoration:none; padding:15px; display:block; border-radius:10px; font-family:'Fredoka One'; margin-top:20px;">KEMBALI</a>
+        </div>
+    </div>
+    <script>
+        // Database 50 Soal AM Matematika (Gabungan Kelas 4, 5, 6)
+        const db = [
+            ["KPK dari 12 dan 18 adalah...","24","36","72","6",1],
+            ["FPB dari 24 dan 36 adalah...","6","8","12","24",2],
+            ["Pecahan yang senilai dengan 2/3 adalah...","4/6","3/4","5/6","6/12",0],
+            ["Hasil dari 3/4 + 1/2 adalah...","4/6","1 1/4","5/4","1 1/2",1],
+            ["Bentuk desimal dari 3/5 adalah...","0,3","0,5","0,6","0,75",2],
+            ["Hasil dari 2,5 x 0,4 adalah...","10","1,0","0,1","100",1],
+            ["Sebuah persegi panjang memiliki panjang 12 cm dan lebar 8 cm. Luasnya adalah...","40 cm²","20 cm²","96 cm²","48 cm²",2],
+            ["Keliling persegi dengan panjang sisi 15 cm adalah...","60 cm","225 cm","30 cm","45 cm",0],
+            ["Luas segitiga dengan alas 10 cm dan tinggi 12 cm adalah...","120 cm²","60 cm²","22 cm²","30 cm²",1],
+            ["Sudut siku-siku besarnya...","45°","90°","180°","360°",1],
+            ["Sebuah kubus memiliki panjang rusuk 9 cm. Volume kubus tersebut adalah...","81 cm³","729 cm³","324 cm³","27 cm³",1],
+            ["Volume balok dengan ukuran p=10 cm, l=6 cm, t=5 cm adalah...","60 cm³","300 cm³","21 cm³","150 cm³",1],
+            ["Jika jarak pada peta 5 cm dan skala 1:1.000.000, maka jarak sebenarnya adalah...","500 km","50 km","5 km","0,5 km",1],
+            ["Kecepatan rata-rata mobil yang menempuh 120 km dalam 2 jam adalah...","40 km/jam","60 km/jam","80 km/jam","240 km/jam",1],
+            ["Sebuah kran air mengalirkan 30 liter dalam 5 menit. Debit kran tersebut adalah...","6 liter/menit","150 liter/menit","5 liter/menit","10 liter/menit",0],
+            ["Hasil pengerjaan dari 15 + 40 : 8 adalah...","20","6","15","55",0],
+            ["Suhu di kota A adalah -5°C, lalu naik 12°C. Suhu kota A sekarang adalah...","17°C","7°C","-17°C","-7°C",1],
+            ["Hasil dari -25 - (-10) adalah...","-35","-15","15","35",1],
+            ["Sebuah lingkaran memiliki jari-jari 14 cm. Kelilingnya adalah... (π=22/7)","44 cm","88 cm","154 cm","616 cm",1],
+            ["Luas lingkaran dengan diameter 20 cm adalah... (π=3,14)","314 cm²","62,8 cm²","1.256 cm²","31,4 cm²",0],
+            ["Banyaknya titik sudut pada balok adalah...","6","8","12","16",1],
+            ["Bangun ruang yang memiliki satu sisi lengkung tanpa sudut adalah...","Bola","Kerucut","Tabung","Prisma",0],
+            ["Volume tabung dengan r=7 cm dan t=10 cm adalah...","154 cm³","1.540 cm³","2.200 cm³","308 cm³",1],
+            ["Berikut adalah data nilai: 7, 8, 9, 7, 6, 8, 7. Modusnya adalah...","6","7","8","9",1],
+            ["Rata-rata dari nilai 6, 8, 10, 8 adalah...","7","8","9","10",1],
+            ["Median dari data 5, 6, 7, 8, 9 adalah...","6","7","8","6,5",1],
+            ["Hasil dari 5² + 4² adalah...","81","41","18","100",1],
+            ["Akar pangkat dua dari 225 adalah...","15","25","12","14",0],
+            ["Jika 1 gross = 144 buah, maka 2 gross + 2 lusin adalah... buah.","288","300","312","168",2],
+            ["1 abad - 2 windu = ... tahun.","84","90","116","120",0],
+            ["1 jam 15 menit sama dengan ... detik.","4.500","3.600","4.000","2.700",0],
+            ["Jarak 5 km = ... meter.","50","500","5.000","50.000",2],
+            ["Pecahan 25% jika diubah menjadi pecahan biasa paling sederhana adalah...","1/4","2/5","1/2","1/5",0],
+            ["2/5 bagian dari Rp 50.000 adalah...","Rp 10.000","Rp 20.000","Rp 25.000","Rp 30.000",1],
+            ["Perbandingan uang Andi dan Budi 3:4. Jika jumlah uang mereka Rp 70.000, uang Budi adalah...","Rp 30.000","Rp 40.000","Rp 50.000","Rp 20.000",1],
+            ["Hasil dari 1,5 : 0,5 adalah...","3","0,3","30","0,03",0],
+            ["Diskon 20% untuk sepatu seharga Rp 150.000 adalah...","Rp 10.000","Rp 20.000","Rp 30.000","Rp 40.000",2],
+            ["Harga setelah diskon (dari soal sebelumnya) yang harus dibayar adalah...","Rp 120.000","Rp 130.000","Rp 140.000","Rp 100.000",0],
+            ["Bangun datar yang memiliki 3 sisi sama panjang dan 3 sudut sama besar adalah...","Segitiga siku-siku","Segitiga sembarang","Segitiga sama kaki","Segitiga sama sisi",3],
+            ["Peluang munculnya gambar pada pelemparan satu koin adalah...","1/2","1/3","1/4","1",0],
+            ["Hasil dari 10.000 - 4.567 + 2.300 adalah...","7.733","6.733","7.633","8.733",0],
+            ["Volume prisma segitiga dengan luas alas 20 cm² dan tinggi 15 cm adalah...","100 cm³","200 cm³","300 cm³","400 cm³",2],
+            ["Banyak sumbu simetri lipat pada persegi adalah...","2","3","4","Tak terhingga",2],
+            ["Sebuah taman berbentuk persegi dengan sisi 20 m. Jika di sekelilingnya ditanami pohon tiap 5 m, banyak pohon adalah...","16","20","24","12",0],
+            ["Kuartal dalam satu tahun berarti ... bulan.","2","3","4","6",1],
+            ["Akar pangkat tiga (∛) dari 512 adalah...","6","7","8","9",2],
+            ["Sifat komutatif penjumlahan ditunjukkan oleh...","a + b = b + a","a x b = b x a","a + (b + c) = (a + b) + c","a x (b + c) = ab + ac",0],
+            ["Jaring-jaring yang jika dilipat membentuk kubus harus memiliki bidang sebanyak...","4","5","6","8",2],
+            ["Data yang paling sering muncul disebut...","Mean","Median","Modus","Selisih",2],
+            ["Sumbu mendatar pada diagram kartesius disebut sumbu...","X","Y","Z","O",0]
+        ];
+        let curr = 0, userAns = new Array(50).fill(null), hpM = 100;
+        function loadQ(){
+            document.getElementById('q-num').innerText = `SOAL ${curr+1} / 50`;
+            document.getElementById('q-text').innerText = db[curr][0];
+            const box = document.getElementById('options-box'); box.innerHTML = '';
+            for(let i=1;i<=4;i++){
+                let b = document.createElement('button'); b.className = 'opt-btn';
+                if(userAns[curr]===i-1) b.classList.add('selected');
+                b.innerText = String.fromCharCode(64+i)+". "+db[curr][i];
+                b.onclick = ()=>{ userAns[curr]=i-1; loadQ(); }; box.appendChild(b);
+            }
+        }
+        function prevSoal(){ if(curr>0){ curr--; loadQ(); } }
+        function serang(){
+            if(userAns[curr]===null){ alert("Hitung dan pilih jawaban!"); return; }
+            if(userAns[curr]===db[curr][5]){ hpM=Math.max(0,hpM-2); document.getElementById('hp-monster').style.width=hpM+"%"; }
+            else { document.body.classList.add('shake'); setTimeout(()=>document.body.classList.remove('shake'),300); }
+            if(curr<49){ curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat(){
+            let s = 0; userAns.forEach((a,i)=>{ if(a===db[i][5]) s+=2; });
+            document.getElementById('m-score').innerText = s;
+            document.getElementById('m-desc').innerText = s>=75?"Luar biasa! Otak kirimu bekerja sangat optimal!":"Masih ada rumus yang terbalik. Terus berlatih berhitung ya!";
+            document.getElementById('result-modal').style.display="flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

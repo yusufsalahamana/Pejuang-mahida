@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asesmen: Qur'an Hadis</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #114232; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #1a5641, #114232); padding: 15px; border-bottom: 4px solid #f1c40f; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; margin-bottom: 5px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 50%; border: 2px solid #f1c40f; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #2ecc71; width: 100%; }
+        .monster .hp-bar { background: #e74c3c; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; text-align: center; color: #f1c40f;}
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #4a1c1c !important; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #fdfaf0; color: #114232; position: relative; }
+        .q-number { background: #1abc9c; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 18px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #a3e4d7; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-family: 'Nunito', sans-serif; font-weight: 700; color: #114232; transition: 0.1s; display: flex; align-items: center; }
+        .opt-btn.selected { border-color: #16a085; background: #1abc9c; color: white; }
+        .nav-area { background: white; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 10; flex-shrink: 0; }
+        .nav-btn { background: #7f8c8d; color: white; border: none; padding: 15px 10px; border-radius: 10px; font-family: 'Fredoka One', cursive; font-size: 16px; width: 48%; }
+        .nav-btn.serang { background: #f39c12; color: #114232; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; text-align: center;}
+        .modal-content { background: #114232; border: 4px solid #f1c40f; color: white; padding: 30px; border-radius: 20px; max-width: 400px; width: 100%; }
+        .modal-title { font-family: 'Fredoka One', cursive; font-size: 26px; color: #f1c40f; margin-bottom: 10px; }
+        .modal-score { font-size: 60px; font-weight: 900; color: #2ecc71; margin: 10px 0; }
+        .modal-btn { background: #f39c12; color: #114232; text-decoration: none; padding: 15px; border-radius: 10px; display: block; font-family: 'Fredoka One', cursive; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">📿</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Santri Cerdas</div>
+        </div>
+        <div style="font-family:'Fredoka One'; font-size:20px; color:#f1c40f;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">🐉</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Naga Ragu</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">AYAT 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat pertanyaan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" id="btn-serang" onclick="serang()">JAWAB! ✍️</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="m-title">ALHAMDULILLAH!</div>
+            <div style="font-size: 50px;" id="m-icon">📖</div>
+            <div class="modal-score" id="m-score">100</div>
+            <p id="m-desc" style="font-weight:700;">Hafalan dan tajwidmu sangat kuat.</p>
+            <a href="menu_am.html" class="modal-btn">KEMBALI KE MENU 🗺️</a>
+        </div>
+    </div>
+    <script>
+        const db = [
+            ["Surat Al-Fatihah disebut juga Ummul Qur'an yang artinya...","Induknya Al-Qur'an","Penutup Al-Qur'an","Pertengahan Al-Qur'an","Inti Al-Qur'an",0],
+            ["Surat Al-Ikhlas berisi tentang...","Kisah para Nabi","KeEsaan Allah (Tauhid)","Hari Kiamat","Hukum Puasa",1],
+            ["Ayat 'Lam yalid walam yuulad' artinya...","Katakanlah Dialah Allah Yang Maha Esa","Allah tempat meminta segala sesuatu","Dia tiada beranak dan tidak pula diperanakkan","Dan tidak ada seorangpun yang setara dengan Dia",2],
+            ["Hukum bacaan Nun Sukun (نْ) atau Tanwin dibagi menjadi...","3","4","5","6",2],
+            ["Apabila Nun Sukun (نْ) bertemu huruf Ba (ب), hukum bacaannya adalah...","Izhar Halqi","Idgham Bighunnah","Iqlab","Ikhfa",1],
+            ["Apabila Nun Sukun (نْ) bertemu huruf Ha (ح), cara membacanya harus...","Mendengung","Samar-samar","Jelas (Izhar)","Memantul",2],
+            ["Iqlab terjadi apabila Nun Sukun (نْ) atau Tanwin bertemu dengan huruf...","Mim (م)","Ba (ب)","Wawu (و)","Fa (ف)",1],
+            ["Cara membaca Ikhfa Haqiqi adalah dengan...","Jelas","Berdengung","Memantul","Samar-samar",3],
+            ["Huruf Idgham Bighunnah terdiri dari 4 huruf, yaitu...","ي, ن, م, و (Yanmu)","ل, ر (Lam, Ra)","أ, ح, خ, ع, غ, ه","ب, ج, د, ط, ق",0],
+            ["Huruf Qalqalah (pantulan) jumlahnya ada 5, yaitu...","ب, ج, د, ط, ق (Baju di Toko)","ا, و, ي","س, ش, ص, ض, ط","ن, م",0],
+            ["Bacaan Qalqalah Sugro (kecil) terjadi apabila huruf qalqalah berharakat sukun asli berada di...","Awal kata","Tengah kata/ayat","Akhir ayat (waqaf)","Sebelum mad",1],
+            ["Ayat 'Qul a'uudzu birabbil falaq'. Kata 'falaq' mengandung hukum bacaan...","Qalqalah Sugro","Qalqalah Kubro","Mad Thabi'i","Ghunnah",1],
+            ["Hukum bacaan Mim Sukun (مْ) dibagi menjadi...","2 macam","3 macam","4 macam","5 macam",1],
+            ["Apabila Mim Sukun (مْ) bertemu dengan huruf Mim (م), hukum bacaannya disebut...","Idgham Mutamatsilain (Mimi)","Ikhfa Syafawi","Izhar Syafawi","Idgham Bighunnah",0],
+            ["Apabila Mim Sukun (مْ) bertemu huruf Ba (ب), hukum bacaannya adalah...","Izhar Syafawi","Iqlab","Ikhfa Syafawi","Idgham Mimi",2],
+            ["Semua huruf hijaiyah selain Mim (م) dan Ba (ب) jika bertemu Mim Sukun dibaca...","Dengung","Jelas (Izhar Syafawi)","Samar","Pantul",1],
+            ["Surat An-Nasr diturunkan di kota Mekah. An-Nasr artinya...","Pertolongan","Kemenangan","Waktu Subuh","Manusia",0],
+            ["Ayat 'Wara'aitan naasa yadkhuluuna fii diinillaahi afwaajaa' terdapat dalam surat...","Al-Kautsar","An-Nasr","Al-Lahab","Al-Kafirun",1],
+            ["Surat Al-Lahab menceritakan tentang paman Nabi yang sangat membenci Islam bernama...","Abu Thalib","Abu Jahal","Abu Lahab","Abu Sufyan",2],
+            ["Nama istri Abu Lahab yang dijuluki 'Pembawa kayu bakar' adalah...","Hindun","Ummu Jamil","Siti Hawa","Ruqayyah",1],
+            ["'Innamal a'maalu bin niyyaat', potongan hadis tersebut menjelaskan bahwa amal perbuatan tergantung pada...","Hartanya","Niatnya","Ucapannya","Pakaiannya",1],
+            ["Hadis tentang niat diriwayatkan oleh...","Bukhari & Muslim","Tirmidzi","Abu Dawud","Ibnu Majah",0],
+            ["Tanda-tanda orang munafik menurut hadis ada...","2","3","4","5",1],
+            ["Ciri orang munafik: Jika berbicara ia berbohong, jika berjanji ia ingkar, dan jika dipercaya ia...","Amanah","Jujur","Khianat","Diam",2],
+            ["Surat Al-Qadr diturunkan pada saat peristiwa...","Isra Mi'raj","Fathu Makkah (Penaklukan Mekah)","Perang Badar","Nuzulul Qur'an",1],
+            ["Ayat 'Fawailul lil mushalliin' terdapat dalam surat...","Al-Ma'un","Al-Fil","Al-Humazah","Al-Fiil",0],
+            ["Orang yang menghardik anak yatim dan enggan memberi makan orang miskin disebut sebagai...","Pendusta Agama","Orang Beriman","Orang Sabar","Orang Riya'",0],
+            ["Riya' (pamer ibadah) dalam surat Al-Ma'un sangat dikecam. Riya' artinya beribadah karena...","Ingin dipuji orang lain","Takut dosa","Mencari rida Allah","Ikhlas",0],
+            ["Al-Qur'an diturunkan secara berangsur-angsur selama...","22 tahun 2 bulan 22 hari","23 tahun","10 tahun","30 tahun",0],
+            ["Wahyu pertama yang diterima Nabi Muhammad SAW di Gua Hira adalah surat...","Al-Fatihah","Al-Baqarah","Al-'Alaq ayat 1-5","Al-Muddassir",2],
+            ["Ayat 'Iqra' bismi rabbikalladzii khalaq' memiliki arti...","Katakanlah Dialah Allah","Bacalah dengan menyebut nama Tuhanmu yang menciptakan","Maha Suci Allah","Segala puji bagi Allah",1],
+            ["Huruf Mad Thabi'i ada 3, yaitu...","Alif, Ba, Ta","Nun, Mim, Wawu","Alif, Wawu, Ya (mati)","Sin, Syin, Shad",2],
+            ["Panjang bacaan Mad Thabi'i adalah...","1 Alif (2 harakat)","2 Alif (4 harakat)","3 Alif (6 harakat)","4 harakat",0],
+            ["Apabila Mad Thabi'i bertemu dengan hamzah (ء) dalam satu kalimat, disebut...","Mad Jaiz Munfasil","Mad Wajib Muttasil","Mad Aridh Lissukun","Mad Badal",1],
+            ["Tanda waqaf (m) / Mim kecil dalam Al-Qur'an berarti...","Boleh berhenti","Wajib berhenti (Waqaf Lazim)","Dilarang berhenti","Berhenti sejenak tanpa napas",1],
+            ["Tanda waqaf (لا) / Lam Alif berarti...","Wajib berhenti","Dilarang berhenti","Boleh lanjut","Berhenti sejenak",1],
+            ["'Tangan di atas lebih baik daripada tangan di bawah.' Arti hadis ini adalah...","Lebih baik menerima","Lebih baik memberi (bersedekah) daripada meminta-minta","Berdoa mengangkat tangan","Mencuri",1],
+            ["Surat At-Tin dinamakan buah Tin karena pada ayat pertama Allah bersumpah demi...","Buah Zaitun","Buah Tin dan Zaitun","Kota Mekah","Gunung Sinai",1],
+            ["'Laqad khalaqnal insaana fii ahsani taqwiim'. Artinya Allah menciptakan manusia dalam bentuk yang...","Sempurna / Sebaik-baiknya","Biasa saja","Lemah","Tinggi",0],
+            ["Dalam surat Al-'Adiyat, Allah menceritakan tentang...","Gajah","Kuda perang yang berlari kencang","Unta","Burung Ababil",1],
+            ["Kisah tentara bergajah yang dihancurkan burung Ababil diceritakan dalam surat...","Al-Quraisy","Al-Kautsar","Al-Fil","Al-Falaq",2],
+            ["Raja yang memimpin pasukan gajah untuk menghancurkan Ka'bah bernama...","Namrud","Firaun","Abrahah","Abrahah (Gubernur Yaman)",3],
+            ["Surat Ad-Duha turun untuk menghibur Nabi Muhammad SAW ketika beliau mengalami...","Sakit keras","Kekosongan wahyu (lama tidak turun wahyu)","Kalah perang","Banyak hutang",1],
+            ["'Wamma bini'mati rabbika fahaddits'. Artinya terhadap nikmat Tuhanmu hendaklah engkau...","Menyembunyikannya","Bersyukur dan menyebut-nyebutnya (menceritakannya)","Melupakannya","Membuangnya",1],
+            ["Menyambung tali persaudaraan dalam hadis sangat ditekankan, disebut...","Silaturahmi","Puasa","Zakat","Ziarah",0],
+            ["Barangsiapa ingin dipanjangkan umurnya dan diluaskan rezekinya, maka hendaklah ia...","Banyak tidur","Menyambung silaturahmi","Banyak makan","Berdagang",1],
+            ["Berbakti dan patuh kepada kedua orang tua dalam agama Islam disebut...","Uququl Walidain","Birrul Walidain","Su'ul Khatimah","Husnul Khatimah",1],
+            ["Surat Al-Zalzalah menceritakan tentang...","Kiamat / Keguncangan bumi yang dahsyat","Surga","Neraka","Harta",0],
+            ["Amal sebesar zarrah (biji sawi) pun, baik atau buruk, pada hari kiamat pasti akan...","Dihapus","Ditimbang dan diberi balasan","Dilupakan","Ditambah",1],
+            ["Malaikat yang bertugas menurunkan wahyu kepada Nabi Muhammad SAW adalah...","Mikail","Israfil","Izrail","Jibril",3]
+        ];
+        
+        let curr = 0, answers = new Array(50).fill(null), hpMonster = 100;
+        const qNum = document.getElementById('q-num'), qText = document.getElementById('q-text');
+        const optBox = document.getElementById('options-box'), btnSerang = document.getElementById('btn-serang');
+        const barMonster = document.getElementById('hp-monster');
+        
+        function loadQ() {
+            qNum.innerText = `AYAT ${curr + 1} / 50`;
+            qText.innerText = db[curr][0]; optBox.innerHTML = '';
+            for(let i=1; i<=4; i++) {
+                let btn = document.createElement('button'); btn.className = 'opt-btn';
+                if(answers[curr] === i-1) btn.classList.add('selected');
+                btn.innerText = String.fromCharCode(64+i) + ". " + db[curr][i];
+                btn.onclick = () => { answers[curr] = i-1; loadQ(); }; optBox.appendChild(btn);
+            }
+            if(curr === 49) { btnSerang.innerText = "KUNCI JAWABAN! 🔒"; btnSerang.style.background = "#e74c3c"; } 
+            else { btnSerang.innerText = "JAWAB! ✍️"; btnSerang.style.background = "#f39c12"; }
+        }
+        function prevSoal() { if(curr > 0) { curr--; loadQ(); } }
+        function serang() {
+            if(answers[curr] === null) { alert("Pilih jawaban sebelum melanjutkan!"); return; }
+            if(answers[curr] === db[curr][5]) { hpMonster = Math.max(0, hpMonster - 2); barMonster.style.width = hpMonster + "%"; } 
+            else { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 300); }
+            if(curr < 49) { curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat() {
+            let skor = 0; answers.forEach((ans, i) => { if(ans === db[i][5]) skor += 2; });
+            document.getElementById('m-score').innerText = skor;
+            let t = document.getElementById('m-title'), d = document.getElementById('m-desc'), ic = document.getElementById('m-icon');
+            if(skor >= 80) { t.innerText = "ALHAMDULILLAH!"; t.style.color = "#2ecc71"; ic.innerText = "📖"; d.innerText = "Hafalan dan tajwidmu sangat kuat!"; } 
+            else { t.innerText = "BELUM TUNTAS"; t.style.color = "#e74c3c"; ic.innerText = "🐉"; d.innerText = "Mari perbanyak mengulang (muraja'ah) bacaanmu!"; document.getElementById('hp-player').style.width = "10%"; }
+            document.getElementById('result-modal').style.display = "flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asesmen: SKI</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #4e342e; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #8d6e63, #4e342e); padding: 15px; border-bottom: 4px solid #2e7d32; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; border: 2px solid #fff; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #2e7d32; width: 100%; }
+        .monster .hp-bar { background: #c0392b; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #2b110e !important; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #efebe9; color: #3e2723; }
+        .q-number { background: #5d4037; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 18px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #bcaaa4; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-weight: 700; color: #4e342e; transition: 0.1s;}
+        .opt-btn.selected { border-color: #5d4037; background: #d7ccc8; }
+        .nav-area { background: white; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; border-top: 2px solid #eee; }
+        .nav-btn { background: #a1887f; color: white; border: none; padding: 15px; border-radius: 10px; font-family: 'Fredoka One', cursive; width: 48%; }
+        .nav-btn.serang { background: #2e7d32; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 5px solid #2e7d32; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">👳‍♂️</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Ksatria Sejarah</div>
+        </div>
+        <div style="font-family:'Fredoka One'; color:#f1c40f;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">⏳</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Monster Lupa Waktu</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">SEJARAH 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat pertanyaan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" onclick="serang()">JAWAB! 📜</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <h2 style="font-family:'Fredoka One'; color:#2e7d32;">FAKTA TERUNGKAP!</h2>
+            <div style="font-size: 60px;">🕌</div>
+            <div style="font-size: 50px; font-weight: 900; color: #2ecc71;" id="m-score">0</div>
+            <p id="m-desc" style="font-weight:700;"></p>
+            <a href="menu_am.html" style="background:#2e7d32; color:white; text-decoration:none; padding:15px; display:block; border-radius:10px; font-family:'Fredoka One'; margin-top:20px;">KEMBALI</a>
+        </div>
+    </div>
+    <script>
+        // Database 50 Soal AM SKI (Gabungan Kelas 4, 5, 6)
+        const db = [
+            ["Keadaan masyarakat Arab sebelum kedatangan Islam dikenal dengan zaman...","Cemerlang","Modern","Jahiliyah (Kebodohan)","Keemasan",2],
+            ["Salah satu kebiasaan buruk masyarakat Arab Jahiliyah adalah...","Menghormati wanita","Menyembah berhala dan berjudi","Membantu fakir miskin","Mempelajari ilmu sains",1],
+            ["Berhala terbesar yang disembah kaum Quraisy di Ka'bah bernama...","Hubal, Latta, Uzza","Zeus","Firaun","Namrud",0],
+            ["Nabi Muhammad SAW lahir pada tanggal...","12 Rabiul Awal Tahun Gajah","1 Muharram","10 Dzulhijjah","17 Ramadhan",0],
+            ["Ayah Nabi Muhammad SAW bernama...","Abu Thalib","Abdul Muthalib","Abdullah","Hamzah",2],
+            ["Ibu Nabi Muhammad SAW bernama...","Siti Khadijah","Siti Aisyah","Aminah binti Wahab","Halimah As-Sa'diyah",2],
+            ["Nabi Muhammad SAW disusui dan diasuh pada masa kecilnya di perkampungan oleh...","Ummu Aiman","Halimah As-Sa'diyah","Fatimah","Khadijah",1],
+            ["Gelar 'Al-Amin' yang diberikan kepada Nabi Muhammad SAW memiliki arti...","Pemberani","Cerdas","Dapat dipercaya","Penyabar",2],
+            ["Nabi Muhammad SAW menerima wahyu pertama di...","Gua Tsur","Gua Hira","Bukit Safa","Masjidil Haram",1],
+            ["Surat yang pertama kali diturunkan kepada Nabi Muhammad SAW adalah...","Al-Fatihah","Al-Mudatsir","Al-'Alaq 1-5","Al-Baqarah",2],
+            ["Orang yang pertama kali membenarkan kenabian Muhammad SAW dari kaum laki-laki adalah...","Umar bin Khattab","Ali bin Abi Thalib","Abu Bakar Ash-Shiddiq","Usman bin Affan",2],
+            ["Dakwah Nabi Muhammad SAW di Mekah yang dilakukan secara sembunyi-sembunyi berlangsung selama...","1 tahun","3 tahun","5 tahun","10 tahun",1],
+            ["Ketika kaum Quraisy menyiksa umat Islam di Mekah, Nabi menganjurkan sahabatnya hijrah (pertama kali) ke...","Yatsrib","Syam","Habasyah (Ethiopia)","Thaif",2],
+            ["Paman Nabi yang sangat kejam dan menentang dakwahnya hingga diabadikan dalam Al-Qur'an adalah...","Abu Lahab","Abu Jahal","Abu Thalib","Abu Sufyan",0],
+            ["Peristiwa perjalanan Nabi Muhammad SAW dari Masjidil Haram ke Masjidil Aqsa lalu naik ke Sidratul Muntaha disebut...","Hijrah","Isra' Mi'raj","Fathu Makkah","Haji Wada",1],
+            ["Dalam peristiwa Isra' Mi'raj, Nabi Muhammad SAW menerima perintah wajib...","Zakat","Puasa Ramadhan","Haji","Salat lima waktu",3],
+            ["Nama kota Yatsrib setelah Nabi Muhammad SAW hijrah diubah menjadi...","Riyadh","Mekah","Madinah","Jeddah",2],
+            ["Penduduk Madinah yang menyambut dan menolong Nabi beserta sahabatnya disebut kaum...","Muhajirin","Anshar","Khawarij","Quraisy",1],
+            ["Umat Islam yang ikut hijrah dari Mekah ke Madinah bersama Nabi disebut kaum...","Anshar","Muhajirin","Quraisy","Bani Hasyim",1],
+            ["Masjid pertama yang dibangun Nabi Muhammad SAW saat hijrah (sebelum sampai Madinah) adalah...","Masjid Nabawi","Masjidil Haram","Masjid Quba","Masjid Aqsa",2],
+            ["Perang pertama umat Islam melawan kaum musyrik Quraisy di mana umat Islam yang sedikit berhasil menang adalah...","Perang Uhud","Perang Khandaq","Perang Badar","Perang Tabuk",2],
+            ["Peristiwa penaklukan kota Mekah tanpa pertumpahan darah disebut...","Isra' Mi'raj","Fathu Makkah","Baiat Aqabah","Haji Wada",1],
+            ["Khulafaur Rasyidin secara bahasa berarti...","Pemimpin yang kaya","Sahabat yang berani","Pemimpin yang mendapat petunjuk","Keluarga Nabi",2],
+            ["Khalifah pertama setelah Nabi Muhammad SAW wafat adalah...","Ali bin Abi Thalib","Utsman bin Affan","Umar bin Khattab","Abu Bakar Ash-Shiddiq",3],
+            ["Khalifah Abu Bakar mendapat gelar 'Ash-Shiddiq' yang artinya...","Pemisah kebenaran dan kebatilan","Yang selalu membenarkan ucapan Nabi","Pemegang amanah","Panglima perang",1],
+            ["Jasa terbesar Khalifah Abu Bakar adalah...","Membangun Masjidil Aqsa","Memerangi orang murtad dan nabi palsu","Membukukan hadis","Memindahkan ibu kota",1],
+            ["Khalifah kedua yang dikenal sangat tegas, adil, dan bergelar Al-Faruq adalah...","Abu Bakar","Utsman bin Affan","Umar bin Khattab","Ali bin Abi Thalib",2],
+            ["Penetapan kalender Hijriah dimulai pada masa khalifah...","Abu Bakar","Umar bin Khattab","Utsman bin Affan","Ali bin Abi Thalib",1],
+            ["Khalifah ketiga yang sangat dermawan dan memiliki gelar Dzunnurain (Pemilik Dua Cahaya) adalah...","Utsman bin Affan","Ali bin Abi Thalib","Umar bin Khattab","Abu Bakar",0],
+            ["Jasa terbesar Khalifah Utsman bin Affan bagi umat Islam adalah...","Membentuk angkatan laut","Membukukan dan menyatukan bacaan (Mushaf) Al-Qur'an","Membangun sekolah","Mendirikan Baitul Mal",1],
+            ["Khalifah keempat yang merupakan menantu sekaligus sepupu Nabi Muhammad SAW adalah...","Abu Bakar","Umar bin Khattab","Utsman bin Affan","Ali bin Abi Thalib",3],
+            ["Agama Islam masuk ke Indonesia disebarkan oleh para ulama, salah satu kelompok yang paling terkenal di Jawa adalah...","Khulafaur Rasyidin","Wali Songo","Wali Pitu","Ulama Mesir",1],
+            ["Sunan Maulana Malik Ibrahim (Sunan Gresik) dalam berdakwah menggunakan cara...","Berperang","Membangun ekonomi, bertani, dan pengobatan","Kesenian wayang","Membangun candi",1],
+            ["Wali Songo yang mendirikan pesantren pertama di Ampel Denta (Surabaya) adalah...","Sunan Bonang","Sunan Ampel (Raden Rahmat)","Sunan Giri","Sunan Drajat",1],
+            ["Sunan Ampel mengajarkan falsafah 'Moh Limo' untuk menjauhi maksiat. Salah satunya Moh Madat yang artinya...","Tidak mau mencuri","Tidak mau berjudi","Tidak mau memakai narkoba/candu","Tidak mau minum keras",2],
+            ["Wali yang berdakwah melalui pendekatan budaya dan menciptakan gending/lagu Macapat Asmaradana dan Pucung adalah...","Sunan Muria","Sunan Ampel","Sunan Drajat","Sunan Kudus",0],
+            ["Pencipta tembang 'Tombo Ati' dan sering menggunakan gamelan Bonang untuk berdakwah adalah...","Sunan Kalijaga","Sunan Bonang","Sunan Giri","Sunan Gresik",1],
+            ["Wali yang berdakwah dengan sangat memperhatikan nasib fakir miskin dan mengajarkan pepali pitu adalah...","Sunan Drajat","Sunan Kudus","Sunan Gunung Jati","Sunan Muria",0],
+            ["Nama asli Sunan Kalijaga pada masa mudanya adalah...","Raden Rahmat","Raden Paku","Raden Mas Syahid","Makdum Ibrahim",2],
+            ["Media dakwah yang paling sukses digunakan Sunan Kalijaga adalah...","Menulis buku","Pewayangan dan Gamelan","Berdagang","Berperang",1],
+            ["Wali yang sangat toleran terhadap umat Hindu dan melarang penyembelihan sapi di wilayahnya adalah...","Sunan Ampel","Sunan Kudus","Sunan Giri","Sunan Drajat",1],
+            ["Menara Masjid peninggalan Sunan Kudus bentuknya menyerupai...","Piramida","Gereja","Candi Hindu","Rumah Gadang",2],
+            ["Satu-satunya Wali Songo yang berdakwah dan menjadi Sultan (Raja) di wilayah Jawa Barat adalah...","Sunan Gunung Jati","Sunan Muria","Sunan Kalijaga","Sunan Ampel",0],
+            ["Kerajaan Islam pertama di Pulau Jawa yang didukung penuh oleh Wali Songo adalah...","Mataram Islam","Banten","Demak Bintoro","Pajang",2],
+            ["Masjid peninggalan Wali Songo yang terkenal dengan soko tatal (tiang serpihan kayu) karya Sunan Kalijaga adalah...","Masjid Ampel","Masjid Agung Demak","Masjid Istiqlal","Masjid Kudus",1],
+            ["Pusat kekuasaan Sunan Giri (Giri Kedaton) terletak di wilayah...","Tuban","Gresik","Lamongan","Surabaya",1],
+            ["Tembang dolanan 'Lir-Ilir' yang sarat makna keagamaan diciptakan oleh...","Sunan Kalijaga","Sunan Bonang","Sunan Giri","Sunan Muria",0],
+            ["Wali Songo tidak menggunakan kekerasan dalam menyebarkan Islam, melainkan menggunakan metode...","Penjajahan","Akulturasi budaya secara damai","Monopoli dagang","Paksaan",1],
+            ["Raden Patah adalah raja Demak pertama yang diangkat atas dukungan dari...","Pemerintah Belanda","Para Wali Songo","Raja Majapahit","Pedagang Arab",1],
+            ["Nilai keteladanan terbesar dari perjuangan Nabi Muhammad dan Wali Songo adalah...","Sabar, pantang menyerah, dan santun dalam berdakwah","Menyukai kemewahan","Mementingkan diri sendiri","Suka berperang",0]
+        ];
+        let curr = 0, userAns = new Array(50).fill(null), hpM = 100;
+        function loadQ(){
+            document.getElementById('q-num').innerText = `SEJARAH ${curr+1} / 50`;
+            document.getElementById('q-text').innerText = db[curr][0];
+            const box = document.getElementById('options-box'); box.innerHTML = '';
+            for(let i=1;i<=4;i++){
+                let b = document.createElement('button'); b.className = 'opt-btn';
+                if(userAns[curr]===i-1) b.classList.add('selected');
+                b.innerText = String.fromCharCode(64+i)+". "+db[curr][i];
+                b.onclick = ()=>{ userAns[curr]=i-1; loadQ(); }; box.appendChild(b);
+            }
+        }
+        function prevSoal(){ if(curr>0){ curr--; loadQ(); } }
+        function serang(){
+            if(userAns[curr]===null){ alert("Pilih jawaban sejarahmu!"); return; }
+            if(userAns[curr]===db[curr][5]){ hpM=Math.max(0,hpM-2); document.getElementById('hp-monster').style.width=hpM+"%"; }
+            else { document.body.classList.add('shake'); setTimeout(()=>document.body.classList.remove('shake'),300); }
+            if(curr<49){ curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat(){
+            let s = 0; userAns.forEach((a,i)=>{ if(a===db[i][5]) s+=2; });
+            document.getElementById('m-score').innerText = s;
+            document.getElementById('m-desc').innerText = s>=75?"Alhamdulillah! Pengetahuan sejarah Islammu sangat luas.":"Ada beberapa fakta sejarah yang terlupa. Mari dibaca lagi ya!";
+            document.getElementById('result-modal').style.display="flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

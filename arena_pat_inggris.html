@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pertarungan: B. Inggris</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #0a3d62; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #192a56, #273c75); padding: 15px; border-bottom: 4px solid #e84118; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; margin-bottom: 5px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; border: 2px solid #fff; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #4cd137; width: 100%; }
+        .monster .hp-bar { background: #e84118; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; text-align: center;}
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #4a1c1c !important; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #f5f6fa; color: #2f3640; position: relative; }
+        .q-number { background: #273c75; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 20px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #dcdde1; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-family: 'Nunito', sans-serif; font-weight: 700; color: #2f3640; transition: 0.1s; display: flex; align-items: center; }
+        .opt-btn.selected { border-color: #273c75; background: #c8d6e5; color: #192a56; }
+        .nav-area { background: white; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 10; flex-shrink: 0; }
+        .nav-btn { background: #718093; color: white; border: none; padding: 15px 10px; border-radius: 10px; font-family: 'Fredoka One', cursive; font-size: 16px; width: 48%; }
+        .nav-btn.serang { background: #e84118; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; text-align: center;}
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; max-width: 400px; width: 100%; border: 5px solid #273c75; }
+        .modal-title { font-family: 'Fredoka One', cursive; font-size: 24px; color: #192a56; margin-bottom: 10px; }
+        .modal-score { font-size: 60px; font-weight: 900; color: #4cd137; margin: 10px 0; }
+        .modal-btn { background: #e84118; color: white; text-decoration: none; padding: 15px; border-radius: 10px; display: block; font-family: 'Fredoka One', cursive; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">💂‍♂️</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Smart Student</div>
+        </div>
+        <div style="font-family:'Fredoka One'; font-size:20px; color:#fbc531;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">🦇</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Grammar Bug</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">QUESTION 1 / 50</div>
+        <div class="q-text" id="q-text">Loading question...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ BACK</button>
+        <button class="nav-btn serang" id="btn-serang" onclick="serang()">ANSWER! ✍️</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="m-title">EXCELLENT!</div>
+            <div style="font-size: 50px;" id="m-icon">🗽</div>
+            <div class="modal-score" id="m-score">100</div>
+            <p id="m-desc" style="font-weight:700;">Your English is very good!</p>
+            <a href="menu_pat.html" class="modal-btn">BACK TO MENU 🗺️</a>
+        </div>
+    </div>
+    <script>
+        const db = [
+            ["Turn left in Indonesian means...","Belok kiri","Belok kanan","Lurus terus","Berhenti",0],
+            ["The hospital is ... the bank and the school.","Behind","Between","In front of","Under",1],
+            ["'Go straight' means...","Jalan lurus terus","Putar balik","Belok kiri","Di sebelah",0],
+            ["The bank is ... the post office. (di seberang)","Beside","Between","Opposite / Across from","Behind",2],
+            ["Where can we buy stamps and send letters?","Hospital","Police Station","Post Office","Market",2],
+            ["A place to save our money is...","School","Bank","Library","Zoo",1],
+            ["We can buy medicine in the...","Pharmacy / Drugstore","Bakery","Restaurant","Station",0],
+            ["If you want to read books, you go to the...","Library","Cinema","Market","Hospital",0],
+            ["'Berapa harganya?' in English is...","How many is it?","How much is it?","What is it?","Where is it?",1],
+            ["A kilo of apples is Rp 25.000. '25.000' in English is...","Twenty thousand","Twenty five thousand","Two hundred thousand","Five thousand",1],
+            ["The shoes are expensive. 'Expensive' means...","Murah","Bagus","Jelek","Mahal",3],
+            ["Cheap is the opposite of...","Beautiful","Expensive","Big","Small",1],
+            ["My mother buys vegetables in the...","Traditional market","Bank","Library","Post office",0],
+            ["What do you need to buy things?","Water","Money","Paper","Stone",1],
+            ["One hundred thousand rupiahs is...","Rp 1.000","Rp 10.000","Rp 100.000","Rp 1.000.000",2],
+            ["A place where trains stop is called...","Airport","Harbor","Railway station","Bus terminal",2],
+            ["Planes land and take off at the...","Airport","Station","Port","Terminal",0],
+            ["A person who flies a plane is a...","Driver","Pilot","Sailor","Mechanic",1],
+            ["Ships stop at the...","Harbor / Port","Airport","Station","Bus stop",0],
+            ["My father goes to the office ... car.","By","On","In","At",0],
+            ["I usually ... up at 05.00 in the morning.","Stand","Get","Sit","Look",1],
+            ["After taking a bath, I ...","Have breakfast","Go to sleep","Take a nap","Watch TV",0],
+            ["My sister ... television every evening.","Watches","Watch","Watching","Watched",0],
+            ["They ... soccer in the yard now. (sedang bermain)","Play","Played","Are playing","Is playing",2],
+            ["She ... to school everyday.","Go","Goes","Going","Went",1],
+            ["What time is it? (07:30)","Half past seven","Seven o'clock","A quarter past seven","Half past six",0],
+            ["It is 09:15. It means...","A quarter to nine","A quarter past nine","Half past nine","Nine o'clock",1],
+            ["'Sepuluh menit lagi jam delapan' is...","Ten to eight","Ten past eight","Eight to ten","Eight past ten",0],
+            ["'What time do you usually sleep?' I sleep ... 09.00 PM.","On","In","At","To",2],
+            ["A half means ... minutes.","15","30","45","60",1],
+            ["A tool to cut paper is...","Eraser","Ruler","Scissors","Pencil",2],
+            ["We sweep the floor using a...","Broom","Mop","Brush","Spoon",0],
+            ["A place to cook in the house is...","Bedroom","Living room","Kitchen","Bathroom",2],
+            ["We use ... to wash our hair.","Soap","Shampoo","Toothpaste","Detergent",1],
+            ["My mother uses a ... to fry eggs.","Plate","Glass","Frying pan","Bowl",2],
+            ["Elephants have a long ...","Tail","Ear","Trunk","Leg",2],
+            ["The animal that can jump and has a pouch is...","Rabbit","Kangaroo","Monkey","Frog",1],
+            ["A giraffe has a long...","Neck","Tail","Trunk","Nose",0],
+            ["The king of the jungle is...","Tiger","Lion","Elephant","Bear",1],
+            ["Fish breathe using...","Lungs","Skin","Gills","Nose",2],
+            ["My uncle has a sister. She is my...","Aunt","Niece","Grandmother","Cousin",0],
+            ["My father and mother are my...","Children","Parents","Grandparents","Siblings",1],
+            ["My grandfather is my father's...","Brother","Father","Uncle","Son",1],
+            ["'Keponakan laki-laki' in English is...","Niece","Nephew","Cousin","Uncle",1],
+            ["I have a brother. He is my parents' ...","Daughter","Son","Nephew","Niece",1],
+            ["A season with a lot of rain is...","Dry season","Rainy season","Winter","Autumn",1],
+            ["Indonesia has ... seasons.","Four","Three","Two","One",2],
+            ["It is very cold in...","Summer","Spring","Autumn","Winter",3],
+            ["People usually wear a raincoat in...","Dry season","Summer","Rainy season","Spring",2],
+            ["The sun shines brightly in the...","Night","Dry season / Summer","Rainy season","Winter",1]
+        ];
+        let curr = 0, answers = new Array(50).fill(null), hpMonster = 100;
+        const qNum = document.getElementById('q-num'), qText = document.getElementById('q-text');
+        const optBox = document.getElementById('options-box'), btnSerang = document.getElementById('btn-serang');
+        const barMonster = document.getElementById('hp-monster');
+        function loadQ() {
+            qNum.innerText = `QUESTION ${curr + 1} / 50`;
+            qText.innerText = db[curr][0]; optBox.innerHTML = '';
+            for(let i=1; i<=4; i++) {
+                let btn = document.createElement('button'); btn.className = 'opt-btn';
+                if(answers[curr] === i-1) btn.classList.add('selected');
+                btn.innerText = String.fromCharCode(64+i) + ". " + db[curr][i];
+                btn.onclick = () => { answers[curr] = i-1; loadQ(); }; optBox.appendChild(btn);
+            }
+            if(curr === 49) { btnSerang.innerText = "SUBMIT! 🔒"; btnSerang.style.background = "#c0392b"; } 
+            else { btnSerang.innerText = "ANSWER! ✍️"; btnSerang.style.background = "#e84118"; }
+        }
+        function prevSoal() { if(curr > 0) { curr--; loadQ(); } }
+        function serang() {
+            if(answers[curr] === null) { alert("Please choose your answer first!"); return; }
+            if(answers[curr] === db[curr][5]) { hpMonster = Math.max(0, hpMonster - 2); barMonster.style.width = hpMonster + "%"; } 
+            else { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 300); }
+            if(curr < 49) { curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat() {
+            let skor = 0; answers.forEach((ans, i) => { if(ans === db[i][5]) skor += 2; });
+            document.getElementById('m-score').innerText = skor;
+            let t = document.getElementById('m-title'), d = document.getElementById('m-desc'), ic = document.getElementById('m-icon');
+            if(skor >= 80) { t.innerText = "EXCELLENT!"; t.style.color = "#4cd137"; ic.innerText = "🏆"; d.innerText = "Great job! Your English is amazing."; } 
+            else { t.innerText = "NOT BAD!"; t.style.color = "#e84118"; ic.innerText = "🦇"; d.innerText = "Keep practicing your vocabulary!"; document.getElementById('hp-player').style.width = "10%"; }
+            document.getElementById('result-modal').style.display = "flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

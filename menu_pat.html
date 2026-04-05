@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pulau 1: Arena PAT</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif; background: #2c3e50;
+            margin: 0; padding: 20px; min-height: 100vh; color: white;
+        }
+        
+        /* PERBAIKAN TATA LETAK NAVIGASI ATAS */
+        .top-nav { display: flex; justify-content: flex-start; margin-bottom: 15px; }
+        .back-btn { background: #e74c3c; color: white; text-decoration: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; box-shadow: 0 4px 0 #c0392b; display: inline-block; }
+        .back-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #c0392b; }
+        
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { font-family: 'Fredoka One', cursive; font-size: 26px; color: #f1c40f; margin: 0 0 5px 0; text-shadow: 2px 2px 0 #d35400; line-height: 1.2; }
+        
+        .grid-mapel { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        
+        .mapel-card {
+            background: #ecf0f1; border-radius: 15px; padding: 15px; text-align: center;
+            text-decoration: none; color: #2c3e50; box-shadow: 0 6px 0 #bdc3c7;
+            transition: 0.1s; display: flex; flex-direction: column; align-items: center;
+        }
+        .mapel-card:active { transform: translateY(6px); box-shadow: 0 0 0 #bdc3c7; }
+        
+        .mapel-icon { font-size: 35px; margin-bottom: 10px; }
+        .mapel-title { font-family: 'Fredoka One', cursive; font-size: 14px; margin: 0; }
+        .mapel-soal { font-size: 11px; font-weight: 900; color: #7f8c8d; margin-top: 5px; background: #e0e6ed; padding: 3px 8px; border-radius: 10px; }
+
+        /* Warna khusus untuk Muatan Lokal */
+        .mapel-card.mulok { background: #dff9fb; box-shadow: 0 6px 0 #c7ecee; }
+        .mapel-card.mulok:active { box-shadow: 0 0 0 #c7ecee; }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <a href="index.html" class="back-btn">⬅️ KEMBALI</a>
+    </div>
+
+    <div class="header">
+        <h1>PILIH LAWAN (PAT)</h1>
+        <p style="margin:0; font-size:14px; color:#bdc3c7;">Semester 2 | Kelas 6</p>
+    </div>
+
+    <div class="grid-mapel">
+        <a href="arena_pat_ski.html" class="mapel-card">
+            <div class="mapel-icon">🕌</div>
+            <h2 class="mapel-title">SKI</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_pat_ipas.html" class="mapel-card">
+            <div class="mapel-icon">🌍</div>
+            <h2 class="mapel-title">IPAS</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_pat_arab.html" class="mapel-card">
+            <div class="mapel-icon">🐪</div>
+            <h2 class="mapel-title">B. ARAB</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_pat_sbdp.html" class="mapel-card">
+            <div class="mapel-icon">🎨</div>
+            <h2 class="mapel-title">SBdP</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_pat_inggris.html" class="mapel-card">
+            <div class="mapel-icon">🗽</div>
+            <h2 class="mapel-title">B. INGGRIS</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_pat_pjok.html" class="mapel-card">
+            <div class="mapel-icon">⚽</div>
+            <h2 class="mapel-title">PJOK</h2>
+            <div class="mapel-soal">50 SOAL</div>
+        </a>
+        <a href="arena_pat_jawa.html" class="mapel-card mulok">
+            <div class="mapel-icon">🎭</div>
+            <h2 class="mapel-title">B. JAWA</h2>
+            <div class="mapel-soal">Muatan Lokal</div>
+        </a>
+        <a href="arena_pat_aswaja.html" class="mapel-card mulok">
+            <div class="mapel-icon">⭐</div>
+            <h2 class="mapel-title">ASWAJA</h2>
+            <div class="mapel-soal">Muatan Lokal</div>
+        </a>
+    </div>
+
+</body>
+</html>

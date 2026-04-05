@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TKA: B. Indonesia</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #2f3640; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* BATTLE ARENA (Ocean Blue) */
+        .battle-arena { background: linear-gradient(to bottom, #0097e6, #00a8ff); padding: 15px; border-bottom: 4px solid #fbc531; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; margin-bottom: 5px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; border: 2px solid #fff; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #2f3640; border-radius: 10px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #44bd32; width: 100%; }
+        .monster .hp-bar { background: #e84118; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; text-align: center; text-shadow: 1px 1px 0 #2f3640;}
+        
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #192a56 !important; }
+
+        /* AREA SOAL */
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #f5f6fa; color: #2f3640; position: relative; }
+        .q-number { background: #0097e6; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 18px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #dcdde1; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-family: 'Nunito', sans-serif; font-weight: 700; color: #2f3640; transition: 0.1s; display: flex; align-items: center; }
+        .opt-btn.selected { border-color: #0097e6; background: #dff9fb; color: #0097e6; }
+        
+        /* NAVIGASI BAWAH */
+        .nav-area { background: white; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 10; flex-shrink: 0; }
+        .nav-btn { background: #718093; color: white; border: none; padding: 15px 10px; border-radius: 10px; font-family: 'Fredoka One', cursive; font-size: 16px; width: 48%; display: flex; justify-content: center; align-items: center;}
+        .nav-btn:active { transform: translateY(2px); }
+        .nav-btn.serang { background: #0097e6; }
+        
+        /* MODAL HASIL */
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; text-align: center;}
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; max-width: 400px; width: 100%; border: 5px solid #0097e6; }
+        .modal-title { font-family: 'Fredoka One', cursive; font-size: 24px; color: #0097e6; margin-bottom: 10px; }
+        .modal-score { font-size: 60px; font-weight: 900; color: #44bd32; margin: 10px 0; }
+        .modal-btn { background: #0097e6; color: white; text-decoration: none; padding: 15px; border-radius: 10px; display: block; font-family: 'Fredoka One', cursive; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">🕵️‍♂️</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Ahli Literasi</div>
+        </div>
+        <div style="font-family:'Fredoka One'; font-size:20px; color:#fbc531;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">🧟‍♂️</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Siluman Hoax</div>
+        </div>
+    </div>
+    
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">ANALISIS 1 / 50</div>
+        <div class="q-text" id="q-text">Loading text...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" id="btn-serang" onclick="serang()">JAWAB! 🖋️</button>
+    </div>
+    
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="m-title">LITERASI TUNTAS!</div>
+            <div style="font-size: 50px;" id="m-icon">📖</div>
+            <div class="modal-score" id="m-score">100</div>
+            <p id="m-desc" style="font-weight:700;">Kemampuan membacamu sangat kritis!</p>
+            <a href="menu_tka.html" class="modal-btn">KEMBALI KE MENU 🗺️</a>
+        </div>
+    </div>
+    
+    <script>
+        // Database 50 Soal TKA Bahasa Indonesia
+        const db = [
+            ["Gagasan utama yang mendasari berdirinya sebuah paragraf disebut...","Kalimat penjelas","Ide pokok","Simpulan","Amanat",1],
+            ["Paragraf yang letak kalimat utamanya berada di awal paragraf disebut paragraf...","Deduktif","Induktif","Campuran","Narasi",0],
+            ["Paragraf yang letak kalimat utamanya berada di akhir paragraf disebut paragraf...","Deduktif","Induktif","Deskripsi","Eksposisi",1],
+            ["Teks yang menjelaskan tentang proses terjadinya suatu fenomena alam atau sosial disebut...","Teks Deskripsi","Teks Narasi","Teks Eksplanasi","Teks Persuasi",2],
+            ["Teks yang bertujuan membujuk atau memengaruhi pembaca agar mengikuti ajakan penulis disebut...","Eksplanasi","Persuasi","Argumentasi","Deskripsi",1],
+            ["Cerita fiksi yang tokoh utamanya adalah hewan yang dapat berbicara disebut...","Legenda","Mite","Fabel","Sage",2],
+            ["Pesan moral atau nasihat yang ingin disampaikan pengarang dalam sebuah cerita disebut...","Tema","Alur","Latar","Amanat",3],
+            ["Jalan cerita dari awal hingga akhir dalam sebuah karangan fiksi disebut...","Latar","Tema","Alur / Plot","Penokohan",2],
+            ["Tokoh yang memiliki sifat baik dan sering menjadi pemeran utama disebut tokoh...","Antagonis","Protagonis","Tritagonis","Figuran",1],
+            ["Tokoh yang menjadi lawan dari tokoh utama (biasanya berwatak jahat) disebut...","Protagonis","Antagonis","Tritagonis","Sutradara",1],
+            ["Sinonim (persamaan kata) dari kata 'Rajin' adalah...","Malas","Giat","Bodoh","Sombong",1],
+            ["Antonim (lawan kata) dari kata 'Kendur' adalah...","Lemah","Putus","Kencang","Lambat",2],
+            ["'Doni sering disebut sebagai kutu buku di kelasnya.' Makna kiasan 'kutu buku' adalah...","Orang yang suka memelihara kutu","Orang yang kotor","Orang yang sangat gemar membaca","Buku yang banyak kutunya",2],
+            ["'Pak Rudi membanting tulang demi membiayai sekolah anaknya.' Arti banting tulang adalah...","Olahraga gulat","Bekerja sangat keras","Menyakiti diri sendiri","Mencari tulang",1],
+            ["Orang yang menjadi tangan kanan bos perusahaan itu sangat terpercaya. 'Tangan kanan' artinya...","Orang kepercayaan","Tangan sebelah kanan","Anak sulung","Pegawai baru",0],
+            ["Kata tanya yang tepat untuk menanyakan tempat adalah...","Kapan","Bagaimana","Di mana","Siapa",2],
+            ["Kata tanya yang digunakan untuk menanyakan proses atau cara melakukan sesuatu adalah...","Apa","Mengapa","Bagaimana","Berapa",2],
+            ["Puisi lama yang bersajak a-b-a-b, terdiri dari 4 baris dalam satu bait disebut...","Gurindam","Syair","Pantun","Karmina",2],
+            ["Pada pantun, baris pertama dan kedua disebut sebagai...","Isi","Sampiran","Tema","Amanat",1],
+            ["Pada pantun, baris ketiga dan keempat memuat tentang...","Sampiran","Bait","Sajak","Isi / Maksud",3],
+            ["Laporan yang dibuat setelah melakukan kunjungan ke suatu tempat disebut...","Laporan pengamatan","Surat resmi","Teks pidato","Puisi",0],
+            ["Bagian awal pada surat resmi yang berisi informasi instansi/lembaga pengirim disebut...","Kop surat / Kepala surat","Salam pembuka","Isi surat","Tanda tangan",0],
+            ["Surat yang dikirimkan kepada teman atau keluarga tanpa menggunakan bahasa yang baku disebut surat...","Dinas","Resmi","Pribadi","Undangan",2],
+            ["Bentuk ringkas dari suatu karangan atau buku tanpa mengubah alur aslinya disebut...","Sinopsis","Resensi","Biografi","Autobiografi",0],
+            ["Kata baku dari kata 'apotik' yang sesuai dengan Kamus Besar Bahasa Indonesia (KBBI) adalah...","Apotiq","Apoteker","Apotek","Puskesmas",2],
+            ["Kata baku dari 'jadual' adalah...","Jaduwal","Jadwal","Jadual","Jadawal",1],
+            ["Kata baku dari 'ijin' adalah...","Ijin","Idzin","Izin","Izien",2],
+            ["Penulisan tempat dan tanggal surat yang benar adalah...","Mojokerto 5 April 2026","Mojokerto. 5 April 2026","Mojokerto, 5 April 2026","Mojokerto; 5 April 2026",2],
+            ["Membaca dengan cepat untuk menemukan informasi tertentu secara langsung disebut membaca...","Memindai (Scanning)","Memahami","Nyaring","Ekstensif",0],
+            ["Percakapan antar tokoh dalam naskah drama disebut...","Prolog","Epilog","Monolog","Dialog",3],
+            ["Kata pendahuluan sebelum drama dimulai disebut...","Dialog","Prolog","Epilog","Monolog",1],
+            ["Kata hubung (konjungsi) 'tetapi' digunakan untuk menyatakan...","Penambahan","Pemilihan","Pertentangan","Sebab-akibat",2],
+            ["Kata hubung 'karena' digunakan untuk menyatakan...","Pertentangan","Sebab","Akibat","Syarat",1],
+            ["Teks yang menceritakan urutan kejadian secara kronologis (berdasarkan urutan waktu) disebut teks...","Deskripsi","Narasi","Eksplanasi","Persuasi",1],
+            ["'Perkara itu akhirnya diselesaikan di meja hijau.' Meja hijau bermakna...","Meja biliar","Pengadilan","Kantor polisi","Ruang rapat",1],
+            ["Karangan bebas yang tidak terikat oleh baris, bait, dan rima disebut...","Puisi","Pantun","Prosa","Gurindam",2],
+            ["Kalimat yang subjeknya melakukan suatu pekerjaan disebut kalimat...","Pasif","Perintah","Tanya","Aktif",3],
+            ["'Ibu membeli sayur di pasar.' Kata 'sayur' menduduki fungsi sebagai...","Subjek","Predikat","Objek","Keterangan tempat",2],
+            ["'Gadis itu adalah bunga desa di kampungnya.' Arti 'bunga desa' adalah...","Orang yang suka bunga","Perempuan yang paling cantik/populer di desanya","Bunga yang tumbuh di balai desa","Anak kepala desa",1],
+            ["Antonim dari kata 'Proaktif' adalah...","Rajin","Aktif","Kreatif","Pasif",3],
+            ["Kalimat perintah selalu diakhiri dengan tanda baca...","Titik (.)","Koma (,)","Tanya (?)","Seru (!)",3],
+            ["Imbuhan 'me-' jika dirangkai dengan kata dasar 'sapu' akan menjadi...","Mesapu","Mensapu","Menyapu","Mengsapu",2],
+            ["Kata dasar dari kata 'mempertanggungjawabkan' adalah...","Tanggung","Tanggung jawab","Jawab","Mempertanggung",1],
+            ["Penggunaan tanda koma yang tepat untuk pemerincian adalah...","Ayah membeli apel, jeruk, dan mangga.","Ayah membeli, apel jeruk dan mangga.","Ayah membeli apel jeruk, dan, mangga.","Ayah, membeli apel, jeruk, mangga.",0],
+            ["Orang yang tidak sombong sering disebut memiliki sifat...","Tinggi hati","Rendah hati","Rendah diri","Keras kepala",1],
+            ["Tanda petik ganda (\"...\") umumnya digunakan untuk mengapit...","Kalimat tidak langsung","Judul bab","Kalimat langsung / kutipan percakapan","Singkatan",2],
+            ["Buku yang menceritakan riwayat hidup seseorang dan ditulis oleh orang lain disebut...","Autobiografi","Biografi","Sinopsis","Dongeng",1],
+            ["Imbuhan 'pe-' pada kata 'pedagang' menyatakan makna...","Alat","Orang yang melakukan pekerjaan","Sifat","Tempat",1],
+            ["Penulisan huruf kapital yang benar terdapat pada kalimat...","hari ini ayah pergi ke jakarta.","Hari ini Ayah pergi ke Jakarta.","hari Ini ayah Pergi Ke jakarta.","Hari ini ayah pergi ke Jakarta.",1],
+            ["Teks yang bertujuan menggambarkan suatu objek secara rinci seolah-olah pembaca dapat melihat/merasakan disebut...","Teks Argumentasi","Teks Narasi","Teks Deskripsi","Teks Eksplanasi",2]
+        ];
+        
+        let curr = 0, answers = new Array(50).fill(null), hpMonster = 100;
+        const qNum = document.getElementById('q-num'), qText = document.getElementById('q-text');
+        const optBox = document.getElementById('options-box'), btnSerang = document.getElementById('btn-serang');
+        const barMonster = document.getElementById('hp-monster');
+        
+        function loadQ() {
+            qNum.innerText = `ANALISIS ${curr + 1} / 50`;
+            qText.innerText = db[curr][0]; optBox.innerHTML = '';
+            for(let i=1; i<=4; i++) {
+                let btn = document.createElement('button'); btn.className = 'opt-btn';
+                if(answers[curr] === i-1) btn.classList.add('selected');
+                btn.innerText = String.fromCharCode(64+i) + ". " + db[curr][i];
+                btn.onclick = () => { answers[curr] = i-1; loadQ(); }; optBox.appendChild(btn);
+            }
+            if(curr === 49) { btnSerang.innerText = "KUNCI ANALISIS! 🔒"; btnSerang.style.background = "#e84118"; } 
+            else { btnSerang.innerText = "JAWAB! 🖋️"; btnSerang.style.background = "#0097e6"; }
+        }
+        function prevSoal() { if(curr > 0) { curr--; loadQ(); } }
+        function serang() {
+            if(answers[curr] === null) { alert("Pilih jawaban sebelum melanjutkan!"); return; }
+            if(answers[curr] === db[curr][5]) { hpMonster = Math.max(0, hpMonster - 2); barMonster.style.width = hpMonster + "%"; } 
+            else { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 300); }
+            if(curr < 49) { curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat() {
+            let skor = 0; answers.forEach((ans, i) => { if(ans === db[i][5]) skor += 2; });
+            document.getElementById('m-score').innerText = skor;
+            let t = document.getElementById('m-title'), d = document.getElementById('m-desc'), ic = document.getElementById('m-icon');
+            if(skor >= 80) { t.innerText = "LITERASI TUNTAS!"; t.style.color = "#44bd32"; ic.innerText = "📖"; d.innerText = "Pemahaman membaca dan tata bahasamu luar biasa!"; } 
+            else { t.innerText = "TERTAYPO!"; t.style.color = "#e84118"; ic.innerText = "🧟‍♂️"; d.innerText = "Kamu termakan tipuan bacaan. Mari teliti lagi!"; document.getElementById('hp-player').style.width = "10%"; }
+            document.getElementById('result-modal').style.display = "flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

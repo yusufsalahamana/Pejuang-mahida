@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asesmen: Aswaja</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #006266; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #009432, #006266); padding: 15px; border-bottom: 4px solid #f1c40f; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; border: 2px solid #fff; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #2ecc71; width: 100%; }
+        .monster .hp-bar { background: #e74c3c; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #1a0000 !important; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #f1f2f6; color: #2f3542; }
+        .q-number { background: #009432; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 18px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #ced6e0; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-weight: 700; color: #2f3542; transition: 0.1s; }
+        .opt-btn.selected { border-color: #009432; background: #1dd1a1; color: white; }
+        .nav-area { background: white; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; border-top: 2px solid #eee; }
+        .nav-btn { background: #57606f; color: white; border: none; padding: 15px; border-radius: 10px; font-family: 'Fredoka One', cursive; width: 48%; }
+        .nav-btn.serang { background: #009432; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 5px solid #009432; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">👳‍♂️</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Santri Aswaja</div>
+        </div>
+        <div style="font-family:'Fredoka One'; color:#f1c40f;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">🦇</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Monster Kelalaian</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">AMALIYAH 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat pertanyaan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" onclick="serang()">JAWAB! ⭐</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <h2 style="font-family:'Fredoka One'; color:#009432;">ALHAMDULILLAH!</h2>
+            <div style="font-size: 60px;">🌟</div>
+            <div style="font-size: 50px; font-weight: 900; color: #2ecc71;" id="m-score">0</div>
+            <p id="m-desc" style="font-weight:700;"></p>
+            <a href="menu_am.html" style="background:#009432; color:white; text-decoration:none; padding:15px; display:block; border-radius:10px; font-family:'Fredoka One'; margin-top:20px;">KEMBALI</a>
+        </div>
+    </div>
+    <script>
+        const db = [
+            ["Nahdlatul Ulama (NU) didirikan pada tanggal...","31 Januari 1926","17 Agustus 1945","22 Oktober 1945","1 Januari 1926",0],
+            ["Tokoh utama pendiri NU yang dijuluki Hadratus Syaikh adalah...","KH Wahab Hasbullah","KH Hasyim Asy'ari","KH Bisri Syansuri","KH Ridwan Abdullah",1],
+            ["Nahdlatul Ulama didirikan di kota...","Jombang","Surabaya","Jakarta","Semarang",1],
+            ["Arti dari kata 'Nahdlatul Ulama' adalah...","Persatuan Ulama","Kekuatan Ulama","Kebangkitan Ulama","Pergerakan Ulama",2],
+            ["Lambang NU diciptakan oleh...","KH Hasyim Asy'ari","KH Wahab Hasbullah","KH Ridwan Abdullah","KH Wahid Hasyim",2],
+            ["Bintang berjumlah 9 pada lambang NU melambangkan...","Jumlah rakaat salat","Wali Songo","Jumlah benua","Tanda kiamat",1],
+            ["Tali yang mengikat bola dunia pada lambang NU melambangkan...","Persatuan/Ukhuwah","Kekuatan perang","Kekayaan alam","Keindahan",0],
+            ["Paham akidah yang dianut oleh NU adalah...","Ahlussunnah wal Jama'ah","Mu'tazilah","Qadariyah","Jabariyah",0],
+            ["Dalam bidang fiqih, NU mengikuti salah satu dari madzhab empat, mayoritas adalah...","Imam Maliki","Imam Hanafi","Imam Syafi'i","Imam Hambali",2],
+            ["Asas organisasi NU dalam bermasyarakat salah satunya adalah 'Tawasuth' yang berarti...","Moderat / Tengah-tengah","Keras / Radikal","Bebas","Pasrah",0],
+            ["Sikap menghargai perbedaan atau toleransi dalam NU disebut...","Tawazun","Tasamuh","I'tidal","Amar Ma'ruf",1],
+            ["Struktur kepengurusan tertinggi di NU yang berisi para ulama penasihat disebut...","Tanfidziyah","Mustasyar","Syuriyah","A'wan",2],
+            ["Pelaksana harian dalam organisasi NU disebut...","Syuriyah","Tanfidziyah","Banom","Lajnah",1],
+            ["Badan otonom NU untuk kalangan pemuda laki-laki adalah...","Banser","GP Ansor","IPNU","PMII",1],
+            ["Badan otonom NU untuk kalangan perempuan muda adalah...","Muslimat NU","Fatayat NU","IPPNU","Kopri",1],
+            ["Organisasi pelajar putra Nahdlatul Ulama disingkat...","IPNU","IPPNU","HMI","IMM",0],
+            ["Amaliyah membaca kalimat thayyibah untuk mendoakan orang meninggal disebut...","Manaqiban","Tahlilan","Dibaan","Istighosah",1],
+            ["Membaca pujian kepada Nabi Muhammad SAW dengan kitab Al-Barzanji disebut...","Yasinan","Maulidan / Dibaan","Tadarus","Semaan",1],
+            ["Tradisi berkunjung ke makam para wali dan orang saleh disebut...","Wisata","Ziarah Kubur","Reuni","Sowan",1],
+            ["Membaca doa Qunut pada salat Subuh menurut warga NU hukumnya...","Wajib","Haram","Sunnah Muakkad","Makruh",2],
+            ["Jumlah rakaat salat Tarawih yang umumnya dilakukan warga NU adalah...","8 rakaat","11 rakaat","20 rakaat (23 dengan witir)","36 rakaat",2],
+            ["Resolusi Jihad yang mengobarkan semangat 10 November dikeluarkan pada tanggal...","22 Oktober 1945","17 Agustus 1945","31 Januari 1926","10 November 1945",0],
+            ["Hari Santri Nasional diperingati setiap tanggal...","22 Oktober","10 November","31 Januari","1 Muharram",0],
+            ["Tokoh NU yang pernah menjabat sebagai Presiden ke-4 RI adalah...","KH Wahid Hasyim","KH Abdurrahman Wahid (Gus Dur)","KH Ma'ruf Amin","KH Said Aqil Siradj",1],
+            ["Ciri khas pondok pesantren NU adalah adanya pengajaran kitab kuning dengan metode...","Sorogan dan Bandongan","Seminar","Diskusi panel","Kuliah umum",0],
+            ["Bintang terbesar yang berada di tengah lambang NU melambangkan...","Nabi Muhammad SAW","Khulafaur Rasyidin","Wali Songo","KH Hasyim Asy'ari",0],
+            ["Warna hijau pada lambang NU melambangkan...","Keberanian","Kedamaian dan Kesuburan","Kemewahan","Kegelapan",1],
+            ["Sikap seimbang dalam berkhidmat kepada Allah, manusia, dan lingkungan disebut...","Tawasuth","Tawazun","Tasamuh","I'tidal",1],
+            ["Gelar Rais Akbar PBNU pertama kali diberikan kepada...","KH Wahab Hasbullah","KH Hasyim Asy'ari","KH Bisri Syansuri","KH Sahal Mahfudz",1],
+            ["Lembaga pendidikan formal di bawah naungan NU dikoordinasikan oleh...","LP Ma'arif NU","LAKPESDAM","RMI","Muslimat",0],
+            ["Tradisi bersalaman dengan mencium tangan kiai/guru disebut sebagai wujud...","Kesombongan","Takzim / Menghormati","Kelemahan","Ketakutan",1],
+            ["Membaca selawat Nabi diperintahkan dalam Al-Qur'an surat...","Al-Baqarah","Al-Fatihah","Al-Ahzab ayat 56","Al-Ikhlas",2],
+            ["Ulama yang merumuskan paham akidah Asy'ariyah adalah...","Imam Syafi'i","Imam Abu Hasan Al-Asy'ari","Imam Al-Ghazali","Imam Ahmad bin Hanbal",1],
+            ["Istighosah secara bahasa berarti memohon...","Harta","Pertolongan kepada Allah","Kenaikan pangkat","Kematian",1],
+            ["Pasukan inti dari GP Ansor yang bertugas menjaga ulama dan NKRI adalah...","Pagar Nusa","Banser","IPNU","Lajnah",1],
+            ["Organisasi pencak silat resmi di bawah naungan NU adalah...","Pencak Organisasi","Tapak Suci","Pagar Nusa","Merpati Putih",2],
+            ["Dua kalimat syahadat disebut juga Syahadatain, yaitu syahadat...","Tauhid dan Rasul","Diri dan Alam","Dunia dan Akhirat","Iman dan Islam",0],
+            ["Sifat wajib Allah 'Mukhalafatu lil hawaditsi' artinya Allah...","Berbeda dengan makhluk-Nya","Sama dengan makhluk-Nya","Membutuhkan bantuan","Akan binasa",0],
+            ["Iman kepada Qada dan Qadar termasuk rukun iman ke...","3","4","5","6",3],
+            ["Warga NU sangat menghormati para Habaib, yaitu keturunan dari...","Raja Arab","Nabi Muhammad SAW","Para Wali","Sahabat Nabi",1],
+            ["Membayar fidyah bagi orang yang tidak mampu berpuasa karena tua renta hukumnya...","Haram","Sunnah","Wajib","Mubah",2],
+            ["Batas minimal jumlah jamaah salat Jumat menurut madzhab Syafi'i adalah...","10 orang","20 orang","40 orang laki-laki","100 orang",2],
+            ["Menyapu wajah setelah salam saat salat adalah tradisi yang sering dilakukan warga NU sebagai wujud...","Kesedihan","Syukur dan Tabarruk","Kedinginan","Kelelahan",1],
+            ["Kitab rujukan utama dalam berakhlak bagi santri NU adalah kitab...","Adabul 'Alim wal Muta'allim","Kamus Besar","Buku Cerita","Ensiklopedia",0],
+            ["Pondok Pesantren Tebuireng didirikan oleh...","KH Hasyim Asy'ari","KH Wahab Hasbullah","KH Bisri Syansuri","Gus Dur",0],
+            ["Warna putih pada tulisan Nahdlatul Ulama melambangkan...","Keberanian","Kesucian","Kesuburan","Keagungan",1],
+            ["Salah satu amaliyah saat gerhana bulan/matahari adalah melakukan salat...","Rawatib","Khusuf / Kusuf","Istisqa","Dhuha",1],
+            ["Warga NU gemar melakukan sedekah bumi sebagai wujud syukur atas hasil...","Dagang","Pertanian / Alam","Pabrik","Sekolah",1],
+            ["Tokoh pendiri NU yang merupakan ahli hukum Islam (Ahli Fiqih) dan pendiri Ponpes Denanyar adalah...","KH Wahab Hasbullah","KH Hasyim Asy'ari","KH Bisri Syansuri","KH As'ad Samsul Arifin",2],
+            ["Semboyan warga NU dalam mencintai tanah air adalah 'Hubbul Wathan minal ...'","Iman","Dunya","Ulama","Akhlaq",0]
+        ];
+        let curr = 0, userAns = new Array(50).fill(null), hpM = 100;
+        function loadQ(){
+            document.getElementById('q-num').innerText = `AMALIYAH ${curr+1} / 50`;
+            document.getElementById('q-text').innerText = db[curr][0];
+            const box = document.getElementById('options-box'); box.innerHTML = '';
+            for(let i=1;i<=4;i++){
+                let b = document.createElement('button'); b.className = 'opt-btn';
+                if(userAns[curr]===i-1) b.classList.add('selected');
+                b.innerText = String.fromCharCode(64+i)+". "+db[curr][i];
+                b.onclick = ()=>{ userAns[curr]=i-1; loadQ(); }; box.appendChild(b);
+            }
+        }
+        function prevSoal(){ if(curr>0){ curr--; loadQ(); } }
+        function serang(){
+            if(userAns[curr]===null){ alert("Pilih amaliyah (jawaban) yang benar, Santri!"); return; }
+            if(userAns[curr]===db[curr][5]){ hpM=Math.max(0,hpM-2); document.getElementById('hp-monster').style.width=hpM+"%"; }
+            else { document.body.classList.add('shake'); setTimeout(()=>document.body.classList.remove('shake'),300); }
+            if(curr<49){ curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat(){
+            let s = 0; userAns.forEach((a,i)=>{ if(a===db[i][5]) s+=2; });
+            document.getElementById('m-score').innerText = s;
+            document.getElementById('m-desc').innerText = s>=75?"Alhamdulillah! Amaliyah dan akidah Aswajamu sangat mantap!":"Masih ada yang keliru. Mari ngaji lebih rajin lagi ya!";
+            document.getElementById('result-modal').style.display="flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

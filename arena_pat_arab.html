@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pertarungan: Bahasa Arab</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #8e44ad; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* HEADER (Gurun/Emas) */
+        .battle-arena { background: linear-gradient(to bottom, #d35400, #a04000); padding: 15px; border-bottom: 4px solid #f1c40f; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; margin-bottom: 5px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; border: 2px solid #fff; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s, background 0.3s; }
+        .player .hp-bar { background: #2ecc71; width: 100%; }
+        .monster .hp-bar { background: #e74c3c; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; text-align: center;}
+        
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s ease-in-out; background: #641e16 !important; }
+
+        /* AREA SOAL (Tengah - Terisolasi dari Header/Footer) */
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #fdf2e9; color: #2c3e50; position: relative; }
+        .q-number { background: #e67e22; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 20px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #edbb99; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-family: 'Nunito', sans-serif; font-weight: 700; color: #2c3e50; transition: 0.1s; display: flex; align-items: center; }
+        .opt-btn:active { transform: scale(0.98); background: #fae5d3; }
+        .opt-btn.selected { border-color: #d35400; background: #e67e22; color: white; }
+        
+        /* NAVIGASI BAWAH (Anti-Tumpuk dengan Gesture Android) */
+        .nav-area { background: white; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 10; flex-shrink: 0; }
+        .nav-btn { background: #7f8c8d; color: white; border: none; padding: 15px 10px; border-radius: 10px; font-family: 'Fredoka One', cursive; font-size: 16px; width: 48%; transition: 0.2s; display: flex; justify-content: center; align-items: center;}
+        .nav-btn:active { transform: translateY(2px); }
+        .nav-btn.serang { background: #d35400; }
+        
+        /* MODAL */
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; text-align: center;}
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; max-width: 400px; width: 100%; }
+        .modal-title { font-family: 'Fredoka One', cursive; font-size: 24px; color: #d35400; margin-bottom: 10px; }
+        .modal-score { font-size: 60px; font-weight: 900; color: #f39c12; margin: 10px 0; }
+        .modal-btn { background: #d35400; color: white; text-decoration: none; padding: 15px; border-radius: 10px; display: block; font-family: 'Fredoka One', cursive; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">👦🏽</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Murid Rajin</div>
+        </div>
+        <div style="font-family:'Fredoka One'; font-size:20px; color:#f1c40f;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">🐪</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Jin Malas</div>
+        </div>
+    </div>
+
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">SOAL 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat pertanyaan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ KEMBALI</button>
+        <button class="nav-btn serang" id="btn-serang" onclick="serang()">JAWAB! ✍️</button>
+    </div>
+
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="m-title">MUMTAZ! (Luar Biasa)</div>
+            <div style="font-size: 50px;" id="m-icon">🐪</div>
+            <div class="modal-score" id="m-score">100</div>
+            <p id="m-desc" style="font-weight:700;">Penguasaan kosa katamu luar biasa!</p>
+            <a href="menu_pat.html" class="modal-btn">KEMBALI KE MENU 🗺️</a>
+        </div>
+    </div>
+
+    <script>
+        // Database 50 Soal B. Arab Kelas 6
+        const db = [
+            ["Apa bahasa Arab dari 'Jam'?","A. السَّاعَةُ (As-Saa'ah)","B. الدَّقِيْقَةُ (Ad-Daqiqah)","C. الوَقْتُ (Al-Waqtu)","D. اليَوْمُ (Al-Yaumu)",0],
+            ["'Jam satu tepat' dalam bahasa Arab adalah...","A. السَّاعَةُ الثَّانِيَةُ","B. السَّاعَةُ الوَاحِدَةُ تَمَامًا","C. السَّاعَةُ الثَّالِثَةُ","D. السَّاعَةُ الرَّابِعَةُ",1],
+            ["Angka '6' (Enam) untuk jam dalam bahasa Arab adalah...","A. خَامِسَة (Khaamisah)","B. سَادِسَة (Saadisah)","C. سَابِعَة (Saabi'ah)","D. ثَامِنَة (Thaaminah)",1],
+            ["'Setengah' (30 menit) dalam bahasa Arab disebut...","A. الرُّبْعُ (Ar-Rub'u)","B. الثُّلُثُ (Ats-Tsulutsu)","C. النِّصْفُ (An-Nishfu)","D. التَّمَامُ (At-Tamaamu)",2],
+            ["Apa arti kata كَمْ السَّاعَةُ الْآنَ ؟ (Kamis saa'atul aana?)","A. Di mana jamnya?","B. Jam berapa sekarang?","C. Siapa yang punya jam?","D. Kapan kita pergi?",1],
+            ["'Saya bangun tidur' dalam bahasa Arab adalah...","A. أَقُوْمُ مِنَ النَّوْمِ (Aquumu minan naum)","B. أَذْهَبُ (Adzhabu)","C. أَرْجِعُ (Arji'u)","D. أَكْتُبُ (Aktubu)",0],
+            ["'Pagi hari' dalam bahasa Arab adalah...","A. نَهَارًا (Nahaaran)","B. مَسَاءً (Masaa-an)","C. لَيْلًا (Lailan)","D. صَبَاحًا (Shabaahan)",3],
+            ["Arti dari kalimat أُصَلِّي الصُّبْحَ (Ushallish shubha) adalah...","A. Saya mandi pagi","B. Saya salat Subuh","C. Saya sarapan","D. Saya tidur",1],
+            ["Bahasa Arab dari 'Sekolah' adalah...","A. المَسْجِدُ (Al-Masjidu)","B. البَيْتُ (Al-Baitu)","C. المَدْرَسَةُ (Al-Madrasatu)","D. السُّوْقُ (As-Suuqu)",2],
+            ["'Saya pergi ke sekolah' dalam bahasa Arab...","A. أَذْهَبُ إِلَى الْمَدْرَسَةِ","B. أَرْجِعُ مِنَ الْمَدْرَسَةِ","C. أَقْرَأُ الْكِتَابَ","D. أَلْعَبُ كُرَةَ الْقَدَمِ",0],
+            ["Kata تَلَامِيْذُ (Talaamiidzu) artinya adalah...","A. Guru-guru","B. Murid-murid","C. Kepala sekolah","D. Satpam",1],
+            ["Apa arti مُدَرِّسٌ (Mudarrisun)?","A. Murid laki-laki","B. Dokter","C. Guru laki-laki","D. Petani",2],
+            ["'Hari Libur' dalam bahasa Arab disebut...","A. يَوْمُ الْأَحَدِ (Yaumul ahad)","B. يَوْمُ الْعُطْلَةِ (Yaumul 'uthlah)","C. يَوْمُ الِاثْنَيْنِ (Yaumul itsnain)","D. يَوْمُ الْعِيْدِ (Yaumul 'ied)",1],
+            ["Bahasa Arab untuk kata kerja 'Membaca' adalah...","A. يَكْتُبُ (Yaktubu)","B. يَقْرَأُ (Yaqra'u)","C. يَجْلِسُ (Yajlisu)","D. يَأْكُلُ (Ya'kulu)",1],
+            ["'Saya menulis pelajaran' = أَنَا ... الدَّرْسَ (Ana ... ad-darsa)","A. أَقْرَأُ (Aqra'u)","B. أَكْتُبُ (Aktubu)","C. أَسْمَعُ (Asma'u)","D. أَنْظُرُ (Anzhuru)",1],
+            ["'Perpustakaan' dalam bahasa Arab adalah...","A. الْمَقْصَفُ (Al-Maqshafu)","B. الْمَكْتَبَةُ (Al-Maktabatu)","C. الْفَصْلُ (Al-Fashlu)","D. الإِدَارَةُ (Al-Idaaratu)",1],
+            ["Di mana kita meminjam buku di sekolah?","A. فِي الْمَلْعَبِ (Di lapangan)","B. فِي الْمَكْتَبَةِ (Di perpustakaan)","C. فِي الْحَمَّامِ (Di kamar mandi)","D. فِي السُّوْقِ (Di pasar)",1],
+            ["'Hobi' dalam bahasa Arab disebut...","A. الْهِوَايَةُ (Al-Hiwaayatu)","B. الرِّيَاضَةُ (Ar-Riyaadhotu)","C. الْعَمَلُ (Al-'Amalu)","D. الدِّرَاسَةُ (Ad-Diraasatu)",0],
+            ["Hobi 'Membaca' adalah...","A. الرَّسْمُ (Ar-Rasmu)","B. الْقِرَاءَةُ (Al-Qiraa'atu)","C. الْكِتَابَةُ (Al-Kitaabatu)","D. السِّبَاحَةُ (As-Sibaahatu)",1],
+            ["'Berenang' dalam bahasa Arab adalah...","A. السِّبَاحَةُ (As-Sibaahatu)","B. الرِّمَايَةُ (Ar-Rimaayatu)","C. الرَّسْمُ (Ar-Rasmu)","D. الْقِرَاءَةُ (Al-Qiraa'atu)",0],
+            ["Apa arti كُرَةُ الْقَدَمِ (Kuratul Qadami)?","A. Bola voli","B. Bola basket","C. Sepak bola","D. Tenis meja",2],
+            ["Hobi menggambar dalam bahasa Arab disebut...","A. السِّبَاحَةُ","B. الرَّسْمُ (Ar-Rasmu)","C. التَّصْوِيْرُ (At-Tashwiiru)","D. الْغِنَاءُ (Al-Ghinaa'u)",1],
+            ["Kalimat مَا هِوَايَتُكَ ؟ (Maa hiwaayatuka?) artinya...","A. Siapa namamu?","B. Di mana rumahmu?","C. Apa hobimu?","D. Apa kabarmu?",2],
+            ["'Profesi/Pekerjaan' dalam bahasa Arab disebut...","A. الْمِهْنَةُ (Al-Mihnatu)","B. الْهِوَايَةُ (Al-Hiwaayatu)","C. الْمَدْرَسَةُ (Al-Madrasatu)","D. اللَّوْنُ (Al-Launu)",0],
+            ["'Dokter' dalam bahasa Arab adalah...","A. فَلَّاحٌ (Fallaahun)","B. طَبِيْبٌ (Thabiibun)","C. شُرْطِيٌّ (Syurthiyyun)","D. تَاجِرٌ (Taajirun)",1],
+            ["Orang yang bertugas di rumah sakit menyembuhkan pasien adalah...","A. طَبِيْبٌ (Thabiibun)","B. مُهَنْدِسٌ (Muhandisun)","C. مُدَرِّسٌ (Mudarrisun)","D. فَلَّاحٌ (Fallaahun)",0],
+            ["Apa arti شُرْطِيٌّ (Syurthiyyun)?","A. Tentara","B. Petani","C. Polisi","D. Pedagang",2],
+            ["'Petani' dalam bahasa Arab adalah...","A. جُنْدِيٌّ (Jundiyyun)","B. تَاجِرٌ (Taajirun)","C. فَلَّاحٌ (Fallaahun)","D. مُدَرِّسٌ (Mudarrisun)",2],
+            ["Saya ingin menjadi seorang dokter. (أُرِيْدُ أَنْ أَكُوْنَ ...)","A. مُهَنْدِسًا","B. طَبِيْبًا (Thabiiban)","C. فَلَّاحًا","D. تَاجِرًا",1],
+            ["'Sakit' dalam bahasa Arab adalah...","A. صِحَّةٌ (Shihhatun)","B. مَرِيْضٌ (Mariidhun)","C. قَوِيٌّ (Qowiyyun)","D. نَشِيْطٌ (Nasyiithun)",1],
+            ["Apa arti kata مُسْتَشْفَى (Mustasyfa)?","A. Apotek","B. Pasar","C. Rumah Sakit","D. Sekolah",2],
+            ["Bahasa Arab dari 'Obat' adalah...","A. دَوَاءٌ (Dawaa'un)","B. مَاءٌ (Maa'un)","C. شَايٌ (Syaayun)","D. قَهْوَةٌ (Qahwatun)",0],
+            ["Kata رَأْسٌ (Ra'sun) berarti...","A. Tangan","B. Kaki","C. Kepala","D. Perut",2],
+            ["'Tangan' dalam bahasa Arab adalah...","A. يَدٌ (Yadun)","B. رِجْلٌ (Rijlun)","C. عَيْنٌ ('Aynun)","D. أُذُنٌ (Udzunun)",0],
+            ["'Sakit perut' dalam bahasa Arab disebut...","A. أَلَمٌ فِي الرَّأْسِ","B. أَلَمٌ فِي الْبَطْنِ (Alamun fil bathni)","C. أَلَمٌ فِي الْعَيْنِ","D. أَلَمٌ فِي الْأُذُنِ",1],
+            ["Fi'il Madhi (Kata kerja lampau) dari 'Dia telah menulis' adalah...","A. يَكْتُبُ","B. كَتَبَ (Kataba)","C. اُكْتُبْ","D. كَاتِبٌ",1],
+            ["Fi'il Mudhari' (Kata kerja sekarang) dari 'Dia sedang membaca' adalah...","A. قَرَأَ","B. اِقْرَأْ","C. يَقْرَأُ (Yaqra'u)","D. قَارِئٌ",2],
+            ["Kata ganti 'Saya' (أَنَا - Ana) pada awal Fi'il Mudhari' ditandai dengan huruf...","A. ي (Ya)","B. ت (Ta)","C. أ (Alif)","D. ن (Nun)",2],
+            ["'Kita/Kami sedang membaca' (نَحْنُ ... - Nahnu)","A. أَقْرَأُ (Aqra'u)","B. تَقْرَأُ (Taqra'u)","C. يَقْرَأُ (Yaqra'u)","D. نَقْرَأُ (Naqra'u)",3],
+            ["'Kamu (laki-laki)' dalam bahasa Arab adalah...","A. أَنْتَ (Anta)","B. أَنْتِ (Anti)","C. هُوَ (Huwa)","D. هِيَ (Hiya)",0],
+            ["'Di depan' dalam bahasa Arab adalah...","A. خَلْفَ (Khalfa)","B. أَمَامَ (Amaama)","C. جَانِبَ (Jaaniba)","D. فَوْقَ (Fauqa)",1],
+            ["'Di atas' (menempel) dalam bahasa Arab disebut...","A. تَحْتَ (Tahta)","B. عَلَى ('Alaa)","C. فِي (Fii)","D. بَيْنَ (Baina)",1],
+            ["Kata فِي (Fii) berarti...","A. Di dalam","B. Di atas","C. Di bawah","D. Di belakang",0],
+            ["Bahasa Arab dari kata 'Warna' adalah...","A. شَكْلٌ (Syaklun)","B. لَوْنٌ (Launun)","C. جِسْمٌ (Jismun)","D. وَجْهٌ (Wajhun)",1],
+            ["'Merah' dalam bahasa Arab adalah...","A. أَحْمَرُ (Ahmaru)","B. أَبْيَضُ (Abyadhu)","C. أَسْوَدُ (Aswadu)","D. أَخْضَرُ (Akhdharu)",0],
+            ["Bendera kita warnanya 'Merah Putih' (أَحْمَرُ وَ ...)","A. أَخْضَرُ","B. أَسْوَدُ","C. أَبْيَضُ (Abyadhu)","D. أَصْفَرُ",2],
+            ["Arti dari kata سُبُّوْرَةٌ (Sabbuuratun) adalah...","A. Meja","B. Papan tulis","C. Kursi","D. Lemari",1],
+            ["Alat untuk menulis di buku adalah...","A. قَلَمٌ (Qalamun)","B. مِمْسَحَةٌ (Mimsahatun)","C. مِسْطَرَةٌ (Mistharatun)","D. حَقِيْبَةٌ (Haqiibatun)",0],
+            ["Tas (untuk membawa buku) bahasa Arabnya...","A. قِرْطَاسٌ","B. حَقِيْبَةٌ (Haqiibatun)","C. كِتَابٌ","D. دَفْتَرٌ",1],
+            ["Kata شُكْرًا (Syukran) dijawab dengan...","A. صَبَاحَ النُّوْرِ","B. مَسَاءَ النُّوْرِ","C. عَفْوًا ('Afwan)","D. مَعَ السَّلَامَةِ",2]
+        ];
+
+        let currQ = 0;
+        let answers = new Array(50).fill(null);
+        let hpMonster = 100;
+
+        const qNum = document.getElementById('q-num');
+        const qText = document.getElementById('q-text');
+        const optBox = document.getElementById('options-box');
+        const btnSerang = document.getElementById('btn-serang');
+        const barMonster = document.getElementById('hp-monster');
+
+        function loadQ() {
+            qNum.innerText = `SOAL ${currQ + 1} / 50`;
+            qText.innerText = db[currQ][0];
+            optBox.innerHTML = '';
+            
+            for(let i=1; i<=4; i++) {
+                let btn = document.createElement('button');
+                btn.className = 'opt-btn';
+                if(answers[currQ] === i-1) btn.classList.add('selected');
+                btn.innerText = db[currQ][i];
+                btn.onclick = () => { answers[currQ] = i-1; loadQ(); };
+                optBox.appendChild(btn);
+            }
+
+            if(currQ === 49) {
+                btnSerang.innerText = "KUMPULKAN! 🔒";
+                btnSerang.style.background = "#c0392b";
+            } else {
+                btnSerang.innerText = "JAWAB! ✍️";
+                btnSerang.style.background = "#d35400";
+            }
+        }
+
+        function prevSoal() { if(currQ > 0) { currQ--; loadQ(); } }
+
+        function serang() {
+            if(answers[currQ] === null) {
+                alert("Pilih jawabanmu dulu, Akhi/Ukhti!");
+                return;
+            }
+
+            if(answers[currQ] === db[currQ][5]) {
+                hpMonster = Math.max(0, hpMonster - 2); 
+                barMonster.style.width = hpMonster + "%";
+            } else {
+                document.body.classList.add('shake');
+                setTimeout(() => document.body.classList.remove('shake'), 300);
+            }
+
+            if(currQ < 49) { currQ++; loadQ(); } 
+            else { tamat(); }
+        }
+
+        function tamat() {
+            let skor = 0;
+            answers.forEach((ans, i) => { if(ans === db[i][5]) skor += 2; });
+            
+            document.getElementById('m-score').innerText = skor;
+            let title = document.getElementById('m-title');
+            let desc = document.getElementById('m-desc');
+            let icon = document.getElementById('m-icon');
+
+            if(skor >= 80) {
+                title.innerText = "MUMTAZ! (Sempurna)";
+                title.style.color = "#d35400";
+                icon.innerText = "🐪✨";
+                desc.innerText = "Bahasa Arabmu sangat bagus. Pertahankan!";
+            } else {
+                title.innerText = "JAYYID (Cukup)";
+                title.style.color = "#c0392b";
+                icon.innerText = "📚";
+                desc.innerText = "Masih ada kosakata yang terlupa. Mari muraja'ah lagi!";
+                document.getElementById('hp-player').style.width = "10%";
+            }
+            
+            document.getElementById('result-modal').style.display = "flex";
+        }
+
+        loadQ();
+    </script>
+</body>
+</html>

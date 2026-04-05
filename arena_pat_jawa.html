@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pertarungan: B. Jawa</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #3e2723; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* HEADER - Tema Klasik/Batik Jawi */
+        .battle-arena { background: linear-gradient(to bottom, #5d4037, #3e2723); padding: 15px; border-bottom: 4px solid #f39c12; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; margin-bottom: 5px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 50%; border: 2px solid #f39c12; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #2c1a14; border-radius: 10px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #2ecc71; width: 100%; }
+        .monster .hp-bar { background: #c0392b; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; text-align: center; color: #f1c40f;}
+        
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #2c0e0e !important; }
+
+        /* AREA SOAL */
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #fbf0d9; color: #3e2723; position: relative; }
+        .q-number { background: #8d6e63; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; border: 2px solid #5d4037;}
+        .q-text { font-size: 20px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #d7ccc8; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-family: 'Nunito', sans-serif; font-weight: 700; color: #4e342e; transition: 0.1s; display: flex; align-items: center; }
+        .opt-btn.selected { border-color: #5d4037; background: #d7ccc8; color: #3e2723; }
+        
+        /* NAVIGASI BAWAH */
+        .nav-area { background: #fff8e1; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 10; flex-shrink: 0; }
+        .nav-btn { background: #795548; color: white; border: none; padding: 15px 10px; border-radius: 10px; font-family: 'Fredoka One', cursive; font-size: 16px; width: 48%; display: flex; justify-content: center; align-items: center;}
+        .nav-btn:active { transform: translateY(2px); }
+        .nav-btn.serang { background: #c0392b; }
+        
+        /* MODAL HASIL */
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; text-align: center;}
+        .modal-content { background: #fbf0d9; color: #3e2723; padding: 30px; border-radius: 20px; max-width: 400px; width: 100%; border: 5px solid #8d6e63; }
+        .modal-title { font-family: 'Fredoka One', cursive; font-size: 24px; color: #c0392b; margin-bottom: 10px; }
+        .modal-score { font-size: 60px; font-weight: 900; color: #2ecc71; margin: 10px 0; }
+        .modal-btn { background: #8d6e63; color: white; text-decoration: none; padding: 15px; border-radius: 10px; display: block; font-family: 'Fredoka One', cursive; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">👦🏽</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Lare Jawi</div>
+        </div>
+        <div style="font-family:'Fredoka One'; font-size:20px; color:#f1c40f;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">👺</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Buto Ijo</div>
+        </div>
+    </div>
+    
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">PITAKON 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat pertanyaan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" id="btn-serang" onclick="serang()">WANGSULI! 🗡️</button>
+    </div>
+    
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="m-title">SAMPUN RAMPUNG!</div>
+            <div style="font-size: 50px;" id="m-icon">🎭</div>
+            <div class="modal-score" id="m-score">100</div>
+            <p id="m-desc" style="font-weight:700;">Awakmu pancen lare pinter!</p>
+            <a href="menu_pat.html" class="modal-btn">WANGSUL MENU 🗺️</a>
+        </div>
+    </div>
+    
+    <script>
+        const db = [
+            ["Pidato ing basa Jawa uga diarani...","Sesorah","Geguritan","Macapat","Parikan",0],
+            ["Perangane sesorah sing isine atur salam lan puji syukur marang Gusti Allah diarani...","Surasa basa","Wasana basa","Purwaka basa","Pangarep-arep",2],
+            ["Perangane sesorah sing isine inti utawa tujuan utama diarani...","Purwaka","Surasa basa (Isi)","Wasana basa","Salam Pambuka",1],
+            ["Panutuping sesorah (pidato) sing isine njaluk pangapura menawa ana kaluputan diarani...","Purwaka basa","Surasa basa","Wasana basa","Pambagya harja",2],
+            ["Wong sing pinter utawa ahli pidato diarani...","Pamedhar sabda (Orator)","Dhalang","Sindhen","Niyaga",0],
+            ["'Bapak pucung dudu watu dudu gunung, sabamu ing alas, ngabdi mring Bupat...'. Iku tuladha tembang...","Pangkur","Mijil","Pocung","Kinanthi",2],
+            ["Tembang macapat cacahe kabeh ana...","9","10","11","12",2],
+            ["Cacahing wanda (suku kata) saben sagatra ing tembang macapat diarani...","Guru Gatra","Guru Wilangan","Guru Lagu","Guru Basa",1],
+            ["Cacahing gatra (baris) saben sapada (sebait) ing tembang macapat diarani...","Guru Gatra","Guru Wilangan","Guru Lagu","Guru Swara",0],
+            ["Tibaning swara (vokal) ing pungkasaning gatra tembang macapat diarani...","Guru Gatra","Guru Wilangan","Guru Lagu","Dhondhing",2],
+            ["Tembang macapat sing nggambarake lahire jabang bayi yaiku tembang...","Pocung","Maskumambang","Mijil","Sinom",2],
+            ["'Pitik walik saba kebon'. Batangane (jawabane) cangkriman iki yaiku...","Nanas","Salak","Gedhang","Sulak / Kemoceng",0],
+            ["'Dikethok malah tambah dhuwur'. Batangane cangkriman iki yaiku...","Rambut","Kuku","Kathok (Celana panjang)","Pring",2],
+            ["'Bapak demang klambi abang, disuduk manthuk-manthuk'. Batangane yaiku...","Ontong (Jantung gedhang)","Kates","Jambu","Lombok",0],
+            ["Unen-unen 'Kebo nusu gudel' tegese yaiku...","Wong enom njaluk wuruk wong tuwa","Wong tuwa njaluk wuruk marang wong enom","Wong pinter minterake wong bodho","Sedulur sing tukaran",1],
+            ["'Anak polah bapa kapradhah' tegese...","Bapak nesu amarga anake nakal","Tingkah polahe anak, wong tuwa melu nanggung akibate","Anak pinter sing gawe seneng bapakne","Bapak lan anak padha-padha rukun",1],
+            ["Terusane paribasan iki: 'Becik ketitik, ala ...'","Ketara","Keliwat","Krasa","Ketampa",0],
+            ["Unen-unen 'Adigang, adigung, adiguna' ngemu teges ngendel-ngendelake...","Kekuatan, keluhuran, lan kapinteran","Kasugihan lan rupa bagus","Pangkat lan dhuwit","Sabar lan narima",0],
+            ["Bapakne Pandhawa jenenge...","Prabu Destrarastra","Prabu Pandhu Dewanata","Prabu Salya","Prabu Kresna",1],
+            ["Ibune Raden Nakula lan Sadewa yaiku...","Dewi Kunti","Dewi Madrim","Dewi Sinta","Dewi Drupadi",1],
+            ["Pembarepe (anak mbarep) Pandhawa sing nduweni getih putih lan ora seneng perang yaiku...","Raden Arjuna","Raden Werkudara","Prabu Puntadewa (Yudhistira)","Raden Nakula",2],
+            ["Satriya Panengahing Pandhawa, sing rupane bagus lan pinter manah yaiku...","Raden Arjuna (Janaka)","Raden Sadewa","Raden Werkudara","Prabu Kresna",0],
+            ["Satriya Jodhipati sing duwe kuku Pancanaka yaiku...","Yudhistira","Werkudara (Bima)","Arjuna","Sadewa",1],
+            ["Punakawan cacahe ana papat, sing dadi bapakne yaiku...","Gareng","Petruk","Bagong","Semar",3],
+            ["Crita wayang sing nyritakake peperangan antarane Pandhawa lan Kurawa diarani...","Ramayana","Mahabharata","Baratayudha","Arjuna Wiwaha",2],
+            ["Crita wayang bab Prabu Rama sing nylametake Dewi Sinta saka Rahwana ana ing kitab...","Mahabharata","Sutasoma","Ramayana","Negarakertagama",2],
+            ["Crita rakyat sing ana gandheng cenenge karo asal-usul dumadine panggonan diarani...","Fabel","Legenda","Mite","Sage",1],
+            ["Tuladha crita legenda saka Jawa Timur yaiku...","Asal-usul Rawa Pening","Asal-usul Kutha Surabaya","Crita Kancil nyolong Timun","Malin Kundang",1],
+            ["Crita dongeng sing paraga utamane kewan lan bisa ngomong kaya manungsa diarani...","Fabel","Legenda","Mite","Babad",0],
+            ["Basa krama aluse (krama inggil) tembung 'mangan' kanggo wong tuwa yaiku...","Nedha","Mbadhog","Dhahar","Mangan",2],
+            ["'Bapak (tuku) sate ing pasar.' Tembung sing bener kanggo ngganti kata 'tuku' yaiku...","Mundhut","Tumbas","Maringi","Nyuwun",0],
+            ["Basa kramane tembung 'Adus' yaiku...","Tilem","Siram","Kramas","Wungu",1],
+            ["'Kowe mau bengi (turu) jam pira?' Krama aluse tembung 'turu' yaiku...","Tilem","Sare","Mripat","Tangi",1],
+            ["'Ibu (lunga) menyang pasar.' Krama aluse 'lunga' yaiku...","Kesah","Tindak","Mlampah","Mlayu",1],
+            ["Aksara Jawa legena (Ha Na Ca Ra Ka ...) cacahe kabeh ana...","15","20","25","30",1],
+            ["Sandhangan wulu (  ꦶ ) digunakake kanggo ngowahi swara dadi...","i","u","e","o",0],
+            ["Sandhangan suku (  ꦸ ) digunakake kanggo ngowahi swara dadi...","i","u","e","o",1],
+            ["Sandhangan pepet (  ꦼ ) unine...","e (kaya tembung: sate)","e (kaya tembung: sega)","o","a",1],
+            ["Tandha pamaten aksara Jawa ing pungkasaning ukara (selain r, h, ng) diarani...","Pangkon","Layar","Cecak","Wignyan",0],
+            ["Sandhangan panyigeg wanda sing fungsine dadi sesulih aksara sigeg 'ng' yaiku...","Pangkon","Layar","Cecak","Wignyan",2],
+            ["Sandhangan panyigeg wanda kanggo mateni swara 'r' (kaya ing tembung: pasar) yaiku...","Layar","Cecak","Pangkon","Wignyan",0],
+            ["Tembung loro utawa luwih sing digandheng dadi siji lan nuwuhake teges anyar diarani tembung...","Saroja","Camboran","Garba","Entar",1],
+            ["Tembung saroja yaiku tembung loro sing padha utawa meh padha tegese dienggo bebarengan. Tuladhane...","Nagasari","Bagas waras","Buku tulis","Randha royal",1],
+            ["Tembung sing tegese ora salugune (kiasan), tuladha 'dawa tangane' (seneng nyolong) diarani tembung...","Saroja","Camboran","Entar","Garba",2],
+            ["Kosok balene (lawan kata) tembung 'Bungah' (Seneng) yaiku...","Gumbira","Susah / Sedhih","Mesu","Geguyu",1],
+            ["Kosok balene tembung 'Cendhak' (Pendek) yaiku...","Dhuwur","Bagus","Dawa","Amba",2],
+            ["Wong sing tugase nglakokake sepur diarani...","Masinis","Sopir","Nakhoda","Pilot",0],
+            ["Prabu Dasamuka iku ratu ing negara...","Amarta","Ngalengka","Astina","Dwarawati",1],
+            ["Papan panggonan kanggo mandheg lan mungkasi lakune montor mabur (pesawat) yaiku...","Terminal","Stasiun","Pelabuhan","Papan Anggegana (Bandara)",3],
+            ["Seni pertunjukan wayang kulit asline biasane diiringi tabuhan...","Angklung","Rebana","Gamelan","Gitar",2]
+        ];
+        
+        let curr = 0, answers = new Array(50).fill(null), hpMonster = 100;
+        const qNum = document.getElementById('q-num'), qText = document.getElementById('q-text');
+        const optBox = document.getElementById('options-box'), btnSerang = document.getElementById('btn-serang');
+        const barMonster = document.getElementById('hp-monster');
+        
+        function loadQ() {
+            qNum.innerText = `PITAKON ${curr + 1} / 50`;
+            qText.innerText = db[curr][0]; optBox.innerHTML = '';
+            for(let i=1; i<=4; i++) {
+                let btn = document.createElement('button'); btn.className = 'opt-btn';
+                if(answers[curr] === i-1) btn.classList.add('selected');
+                btn.innerText = String.fromCharCode(64+i) + ". " + db[curr][i];
+                btn.onclick = () => { answers[curr] = i-1; loadQ(); }; optBox.appendChild(btn);
+            }
+            if(curr === 49) { btnSerang.innerText = "KUMPULAKE! 🔒"; btnSerang.style.background = "#8e44ad"; } 
+            else { btnSerang.innerText = "WANGSULI! 🗡️"; btnSerang.style.background = "#c0392b"; }
+        }
+        function prevSoal() { if(curr > 0) { curr--; loadQ(); } }
+        function serang() {
+            if(answers[curr] === null) { alert("Pilih wangsulanmu (jawaban) luwih dhisik!"); return; }
+            if(answers[curr] === db[curr][5]) { hpMonster = Math.max(0, hpMonster - 2); barMonster.style.width = hpMonster + "%"; } 
+            else { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 300); }
+            if(curr < 49) { curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat() {
+            let skor = 0; answers.forEach((ans, i) => { if(ans === db[i][5]) skor += 2; });
+            document.getElementById('m-score').innerText = skor;
+            let t = document.getElementById('m-title'), d = document.getElementById('m-desc'), ic = document.getElementById('m-icon');
+            if(skor >= 80) { t.innerText = "LUAR BIASA!"; t.style.color = "#2ecc71"; ic.innerText = "🏆"; d.innerText = "Materi Basa Jawamu wis mateng banget."; } 
+            else { t.innerText = "KURANG SREGEP"; t.style.color = "#c0392b"; ic.innerText = "👺"; d.innerText = "Aja lali sinau maneh ben ora lali basane dhewe."; document.getElementById('hp-player').style.width = "10%"; }
+            document.getElementById('result-modal').style.display = "flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

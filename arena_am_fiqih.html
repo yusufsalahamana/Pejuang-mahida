@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asesmen: Fiqih</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #004d40; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #00796b, #004d40); padding: 15px; border-bottom: 4px solid #f1c40f; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; border: 2px solid #fff; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #2ecc71; width: 100%; }
+        .monster .hp-bar { background: #e74c3c; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #1a0000 !important; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #e0f2f1; color: #004d40; }
+        .q-number { background: #00796b; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 18px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #b2dfdb; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-weight: 700; color: #004d40; transition: 0.1s; }
+        .opt-btn.selected { border-color: #00796b; background: #b2dfdb; }
+        .nav-area { background: white; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; border-top: 2px solid #eee; }
+        .nav-btn { background: #4db6ac; color: white; border: none; padding: 15px; border-radius: 10px; font-family: 'Fredoka One', cursive; width: 48%; }
+        .nav-btn.serang { background: #00796b; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 5px solid #00796b; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">🧎‍♂️</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Pendekar Syariat</div>
+        </div>
+        <div style="font-family:'Fredoka One'; color:#f1c40f;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">🦠</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Monster Syubhat</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">FIQIH 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat pertanyaan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" onclick="serang()">JAWAB! ⚖️</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <h2 style="font-family:'Fredoka One'; color:#00796b;">HUKUM DITEGAKKAN!</h2>
+            <div style="font-size: 60px;">⚖️</div>
+            <div style="font-size: 50px; font-weight: 900; color: #2ecc71;" id="m-score">0</div>
+            <p id="m-desc" style="font-weight:700;"></p>
+            <a href="menu_am.html" style="background:#00796b; color:white; text-decoration:none; padding:15px; display:block; border-radius:10px; font-family:'Fredoka One'; margin-top:20px;">KEMBALI</a>
+        </div>
+    </div>
+    <script>
+        const db = [
+            ["Zakat yang wajib dikeluarkan setiap Muslim menjelang Idul Fitri disebut zakat...","Zakat Mal","Zakat Fitrah","Infaq","Sedekah",1],
+            ["Tujuan utama mengeluarkan zakat fitrah adalah untuk...","Menambah kekayaan","Membersihkan harta","Menyucikan jiwa (diri) dari sifat kikir","Memamerkan harta",2],
+            ["Besaran zakat fitrah untuk satu orang berupa makanan pokok (beras) adalah...","2,5 kg atau 3,5 liter","5 kg","10 liter","1 kg",0],
+            ["Batas akhir waktu pengeluaran zakat fitrah adalah...","Sebelum puasa Ramadhan","Sesudah salat Idul Fitri","Sebelum imam naik mimbar saat salat Idul Fitri","Bulan Muharram",2],
+            ["Zakat harta benda (emas, perak, hasil pertanian, dagangan) disebut...","Zakat Fitrah","Zakat Mal","Hadiah","Pajak",1],
+            ["Syarat harta yang wajib dizakati adalah harus mencapai batas minimal yang disebut...","Haul","Nisab","Mustahiq","Muzakki",1],
+            ["Syarat waktu kepemilikan harta (selama satu tahun Qamariyah) disebut...","Nisab","Riba","Haul","Ghasab",2],
+            ["Orang yang wajib mengeluarkan zakat disebut...","Muzakki","Mustahiq","Gharim","Amil",0],
+            ["Orang yang berhak menerima zakat (mustahiq) menurut Al-Qur'an berjumlah...","5 golongan","6 golongan","7 golongan","8 golongan",3],
+            ["Orang yang bertugas mengumpulkan dan membagikan zakat disebut...","Fakir","Miskin","Amil","Mualaf",2],
+            ["Orang yang baru masuk Islam dan imannya masih lemah, sehingga berhak menerima zakat disebut...","Gharim","Mualaf","Ibnu Sabil","Amil",1],
+            ["Memberikan sebagian harta secara sukarela (tanpa batasan jumlah dan waktu) di jalan Allah disebut...","Zakat Fitrah","Zakat Mal","Infaq / Sedekah","Pajak",2],
+            ["Hewan yang boleh disembelih untuk ibadah Qurban adalah...","Ayam, bebek, angsa","Kambing, sapi, unta, kerbau","Kuda, keledai, gajah","Kelinci, rusa",1],
+            ["Hukum melaksanakan ibadah Qurban bagi yang mampu adalah...","Wajib","Sunnah Muakkad (Sangat dianjurkan)","Mubah","Makruh",1],
+            ["Penyembelihan hewan Qurban dilaksanakan pada tanggal...","1 Syawal","10, 11, 12, 13 Dzulhijjah","1 Ramadhan","10 Muharram",1],
+            ["Tanggal 11, 12, dan 13 Dzulhijjah di mana umat Islam dilarang berpuasa disebut hari...","Tasyrik","Tarwiyah","Arafah","Nahar",0],
+            ["Syarat hewan yang sah untuk diqurbankan adalah...","Sakit-sakitan","Kurus kering","Cacat fisiknya","Sehat, tidak cacat, dan cukup umur",3],
+            ["Satu ekor sapi atau kerbau dapat digunakan qurban untuk maksimal...","1 orang","3 orang","7 orang","10 orang",2],
+            ["Menyengaja berkunjung ke Ka'bah di Makkah untuk melakukan ibadah tertentu pada waktu tertentu disebut...","Umrah","Haji","Ziarah","Tawaf",1],
+            ["Hukum ibadah Haji bagi umat Islam yang mampu adalah...","Sunnah","Wajib satu kali seumur hidup","Fardu Kifayah","Mubah",1],
+            ["Pakaian khusus yang berwarna putih dan tidak berjahit (bagi laki-laki) saat Haji disebut pakaian...","Gamis","Sorban","Ihram","Jubah",2],
+            ["Rukun haji yang membedakannya dengan ibadah Umrah adalah...","Tawaf","Sa'i","Tahallul","Wukuf di Padang Arafah",3],
+            ["Berjalan mengelilingi Ka'bah sebanyak tujuh kali berlawanan arah jarum jam disebut...","Tawaf","Sa'i","Wukuf","Mabit",0],
+            ["Berlari-lari kecil dari bukit Shafa ke bukit Marwah sebanyak tujuh kali disebut...","Tawaf","Sa'i","Melontar Jumrah","Tahallul",1],
+            ["Mencukur atau memotong rambut kepala sebagai tanda selesainya rangkaian ibadah haji/umrah disebut...","Wukuf","Miqat","Tahallul","Ihram",2],
+            ["Batas tempat dan waktu untuk memulai niat ihram haji atau umrah disebut...","Miqat","Mabit","Ka'bah","Hijir Ismail",0],
+            ["Melempar batu kerikil ke tiang Jumrah Ula, Wustha, dan Aqabah adalah bagian dari...","Rukun Haji","Wajib Haji","Sunnah Haji","Syarat Haji",1],
+            ["Segala sesuatu yang boleh dimakan menurut syariat Islam disebut makanan...","Haram","Halal","Makruh","Syubhat",1],
+            ["Kriteria makanan yang halal adalah...","Halal zatnya, cara memperolehnya, dan cara mengolahnya","Enak dan mahal","Diimpor dari luar negeri","Dibeli di restoran mewah",0],
+            ["Memakan daging ayam yang disembelih tanpa membaca nama Allah hukumnya...","Halal","Sunnah","Makruh","Haram",3],
+            ["Minuman yang memabukkan dan menghilangkan akal sehat (Khamr) hukumnya...","Halal","Mubah","Haram","Sunnah",2],
+            ["Hewan laut dan air tawar (seperti ikan), meskipun matinya tanpa disembelih, hukumnya...","Haram","Halal","Syubhat","Makruh",1],
+            ["Ada dua jenis bangkai yang halal dimakan umat Islam, yaitu bangkai...","Sapi dan kambing","Ikan dan belalang","Ayam dan burung","Ular dan katak",1],
+            ["Hewan yang haram dimakan berdasarkan Al-Qur'an secara tegas adalah...","Sapi","Kambing","Babi","Unta",2],
+            ["Hewan bertaring dan berkuku tajam yang memangsa mangsanya hukumnya...","Halal","Sunnah","Makruh","Haram dimakan",3],
+            ["Katak dan buaya hidup di dua alam (air dan darat). Hukum memakannya adalah...","Halal","Haram","Mubah","Wajib",1],
+            ["Hukum dasar Jual Beli dalam Islam adalah...","Wajib","Mubah (Boleh)","Haram","Makruh",1],
+            ["Berikut yang BUKAN rukun jual beli adalah...","Penjual dan pembeli","Barang yang dijual dan alat tukar (uang)","Ijab kabul (akad)","Saksi dan notaris",3],
+            ["Jual beli sistem ijon (membeli buah yang masih sangat muda/belum jelas kualitasnya di pohon) hukumnya...","Halal","Sunnah","Haram karena mengandung gharar (ketidakjelasan)","Mubah",2],
+            ["Syarat barang yang sah untuk diperjualbelikan adalah...","Barang hasil curian","Barangnya haram (seperti miras)","Barangnya bermanfaat dan milik sendiri","Barangnya tidak jelas bentuknya",2],
+            ["Hak untuk meneruskan atau membatalkan transaksi jual beli bagi penjual/pembeli disebut...","Riba","Ghasab","Khiyar","Zakat",2],
+            ["Membeli barang untuk ditimbun saat harga murah, lalu dijual sangat mahal saat barang langka (Ihtikar) hukumnya...","Sunnah","Boleh","Haram","Wajib",2],
+            ["Tukar menukar barang sejenis dengan melebihkan takarannya (contoh: tukar emas lama 10 gr dengan emas baru 8 gr tapi dianggap impas) termasuk perbuatan...","Zakat","Infaq","Riba","Sedekah",2],
+            ["Memberikan sesuatu barang kepada orang lain untuk dimanfaatkan sesaat, lalu dikembalikan secara utuh disebut...","Jual Beli","Sewa Menyewa","Pinjam Meminjam ('Ariyah)","Ghasab",2],
+            ["Hukum merusak atau menghilangkan barang yang dipinjam adalah...","Boleh","Dibiarkan saja","Wajib mengganti atau memperbaiki","Mendapat pahala",2],
+            ["Mengambil atau menggunakan barang milik orang lain tanpa izin (meskipun berniat mengembalikan) disebut...","Ghasab","Pinjam","Sewa","Hibah",0],
+            ["Hukum perbuatan Ghasab (seperti memakai sandal teman tanpa izin di masjid) adalah...","Mubah","Haram dan berdosa","Sunnah","Makruh",1],
+            ["Menemukan barang berharga milik orang lain di jalan yang tidak diketahui pemiliknya disebut barang...","Hibah","Luqathah (Barang temuan)","Hadiah","Warisan",1],
+            ["Jika kita menemukan dompet (barang Luqathah) di jalan, yang harus kita lakukan adalah...","Langsung dipakai","Dibuang","Diumumkan selama waktu tertentu untuk mencari pemiliknya","Diberikan ke teman",2],
+            ["Barang temuan (Luqathah) yang mudah rusak, seperti makanan, sebaiknya...","Disimpan sebulan","Dibiarkan busuk","Boleh dimakan/dijual dan uangnya diganti jika pemiliknya datang","Dibuang ke tempat sampah",2]
+        ];
+        let curr = 0, userAns = new Array(50).fill(null), hpM = 100;
+        function loadQ(){
+            document.getElementById('q-num').innerText = `FIQIH ${curr+1} / 50`;
+            document.getElementById('q-text').innerText = db[curr][0];
+            const box = document.getElementById('options-box'); box.innerHTML = '';
+            for(let i=1;i<=4;i++){
+                let b = document.createElement('button'); b.className = 'opt-btn';
+                if(userAns[curr]===i-1) b.classList.add('selected');
+                b.innerText = String.fromCharCode(64+i)+". "+db[curr][i];
+                b.onclick = ()=>{ userAns[curr]=i-1; loadQ(); }; box.appendChild(b);
+            }
+        }
+        function prevSoal(){ if(curr>0){ curr--; loadQ(); } }
+        function serang(){
+            if(userAns[curr]===null){ alert("Pilih hukumnya dulu, Pendekar!"); return; }
+            if(userAns[curr]===db[curr][5]){ hpM=Math.max(0,hpM-2); document.getElementById('hp-monster').style.width=hpM+"%"; }
+            else { document.body.classList.add('shake'); setTimeout(()=>document.body.classList.remove('shake'),300); }
+            if(curr<49){ curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat(){
+            let s = 0; userAns.forEach((a,i)=>{ if(a===db[i][5]) s+=2; });
+            document.getElementById('m-score').innerText = s;
+            document.getElementById('m-desc').innerText = s>=75?"Alhamdulillah! Pemahaman fiqihmu sangat lurus.":"Ada yang kurang tepat. Pelajari lagi bab syariat ya!";
+            document.getElementById('result-modal').style.display="flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asesmen: B. Arab</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #8d6e63; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #a1887f, #8d6e63); padding: 15px; border-bottom: 4px solid #f1c40f; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; border: 2px solid #f1c40f; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #2ecc71; width: 100%; }
+        .monster .hp-bar { background: #e74c3c; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #5d4037 !important; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #fff8e1; color: #5d4037; }
+        .q-number { background: #8d6e63; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 20px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #d7ccc8; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-weight: 700; color: #5d4037; transition: 0.1s; }
+        .opt-btn.selected { border-color: #8d6e63; background: #d7ccc8; }
+        .nav-area { background: white; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; border-top: 2px solid #eee; }
+        .nav-btn { background: #a1887f; color: white; border: none; padding: 15px; border-radius: 10px; font-family: 'Fredoka One', cursive; width: 48%; }
+        .nav-btn.serang { background: #d35400; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 5px solid #d35400; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">🐪</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Ahli Lughoh</div>
+        </div>
+        <div style="font-family:'Fredoka One'; color:#f1c40f;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">🧞‍♂️</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Monster Lupa Mufrodat</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">MUFRODAT 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat pertanyaan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" onclick="serang()">JAWAB! ✍️</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <h2 style="font-family:'Fredoka One'; color:#d35400;">MUMTAZ!</h2>
+            <div style="font-size: 60px;">🕌</div>
+            <div style="font-size: 50px; font-weight: 900; color: #2ecc71;" id="m-score">0</div>
+            <p id="m-desc" style="font-weight:700;"></p>
+            <a href="menu_am.html" style="background:#d35400; color:white; text-decoration:none; padding:15px; display:block; border-radius:10px; font-family:'Fredoka One'; margin-top:20px;">KEMBALI</a>
+        </div>
+    </div>
+    <script>
+        const db = [
+            ["Ucapan salam saat bertemu seseorang adalah...","صباح الخير","أهلاً وسهلاً","السلام عليكم","مع السلامة",2],
+            ["Apa arti dari kata 'أَنَا' (Ana)?","Kamu","Dia","Kita","Saya",3],
+            ["Bahasa Arab dari 'Sekolah' adalah...","المسجد","المدرسة","البيت","السوق",1],
+            ["Apa bahasa Arabnya 'Buku'?","قلم","مكتب","كتاب","كرسي",2],
+            ["Kosa kata 'مُدَرِّسٌ' (Mudarrisun) artinya...","Murid","Dokter","Guru","Petani",2],
+            ["'Selamat pagi' dalam bahasa Arab adalah...","مساء الخير","صباح الخير","ليلة سعيدة","أهلاً بك",1],
+            ["Jawaban untuk 'كَيْفَ حَالُكَ؟' (Kaifa haaluka) adalah...","أهلاً بك","بخير والحمد لله","مع السلامة","صباح النور",1],
+            ["Angka 'خَمْسَةٌ' (Khamsatun) berarti...","3","5","7","9",1],
+            ["Apa bahasa Arab dari 'Meja'?","كرسي","سبورة","مكتب","باب",2],
+            ["Benda 'مِمْسَحَةٌ' (Mimsahatun) digunakan untuk...","Menulis","Menghapus","Membaca","Duduk",1],
+            ["'Kepala' dalam bahasa Arab adalah...","يد","رجل","رأس","عين",2],
+            ["Apa arti dari 'عَيْنٌ' ('Aynun)?","Telinga","Hidung","Mulut","Mata",3],
+            ["Angka 10 dalam bahasa Arab disebut...","تِسْعَةٌ","عَشَرَةٌ","سَبْعَةٌ","ثَمَانِيَةٌ",1],
+            ["'Rumah' dalam bahasa Arab adalah...","المسجد","المستشفى","البيت","الملعب",2],
+            ["Apa arti 'أُمِّي' (Ummii)?","Ayahku","Saudaraku","Ibuku","Pamanku",2],
+            ["'Jam' dalam bahasa Arab disebut...","اليوم","الساعة","الوقت","الدقيقة",1],
+            ["'الساعة الواحدة' (As-Saa'atul Waahidah) artinya...","Jam satu","Jam dua","Jam tiga","Jam empat",0],
+            ["Kapan kita mengucapkan 'لَيْلَةً سَعِيْدَةً' (Lailatan sa'iidatan)?","Pagi","Siang","Sore","Malam",3],
+            ["Apa arti 'تِلْمِيْذٌ' (Tilmiidzun)?","Guru","Kepala Sekolah","Murid","Satpam",2],
+            ["Bahasa Arab dari 'Polisi' adalah...","فلاح","شرطي","طبيب","مهندس",1],
+            ["Profesi 'طَبِيْبٌ' (Thobiibun) bekerja di...","المدرسة","المكتب","المستشفى","المزرعة",2],
+            ["'Hobi' dalam bahasa Arab disebut...","الهواية","الرياضة","المهنة","الدراسة",0],
+            ["Hobi 'القِرَاءَةُ' (Al-Qiroo'atu) artinya...","Menggambar","Menulis","Membaca","Berenang",2],
+            ["'Sepak Bola' dalam bahasa Arab adalah...","كرة السلة","كرة القدم","كرة الريشة","كرة الطاولة",1],
+            ["Apa arti 'السِّبَاحَةُ' (As-Sibahatu)?","Berlari","Berenang","Memasak","Menyanyi",1],
+            ["Warna 'أَحْمَرُ' (Ahmaru) adalah...","Putih","Hitam","Biru","Merah",3],
+            ["Bahasa Arab dari warna 'Hijau' adalah...","أصفر","أخضر","أزرق","أبيض",1],
+            ["'أَبْيَضُ' (Abyadhu) artinya warna...","Hitam","Putih","Cokelat","Kuning",1],
+            ["Apa arti 'أَمَامَ' (Amaama)?","Di belakang","Di atas","Di bawah","Di depan",3],
+            ["'Di dalam' dalam bahasa Arab adalah...","فِي","عَلَى","تَحْتَ","بَيْنَ",0],
+            ["Kata 'تَحْتَ' (Tahta) artinya...","Di atas","Di bawah","Di samping","Di antara",1],
+            ["'Alat tulis' disebut...","الأدوات المدرسية","الأدوات المكتبية","الأدوات الرياضية","الأدوات المنزلية",0],
+            ["Apa bahasa Arab dari 'Papan Tulis'?","مكتب","كرسي","سبورة","خزانة",2],
+            ["'Dapur' dalam bahasa Arab adalah...","الغرفة","المطبخ","الحمام","الحديقة",1],
+            ["Apa arti 'أَكُلُ' (Aakulu)?","Saya minum","Saya tidur","Saya makan","Saya mandi",2],
+            ["'Saya sedang belajar' dalam bahasa Arab...","أنا أتعلم","أنا أذهب","أنا أرجع","أنا أنام",0],
+            ["Fi'il Mudhori dari kata 'Membaca' untuk 'Dia (lk)' adalah...","يقرأ","تقرأ","أقرأ","نقرأ",0],
+            ["'نحن' (Nahnu) artinya...","Dia","Kamu","Saya","Kami/Kita",3],
+            ["'Kamu (pr)' dalam bahasa Arab adalah...","أنتَ","أنتِ","هو","هي",1],
+            ["Apa arti 'مَسْجِدٌ' (Masjidun)?","Gereja","Masjid","Pasar","Rumah",1],
+            ["'Keluarga' dalam bahasa Arab disebut...","الأصدقاء","الجيران","الأسرة","المعلمون",2],
+            ["Siapa 'أَخِي' (Akhii)?","Saudara laki-lakiku","Saudara perempuanku","Kakekku","Nenekku",0],
+            ["Apa arti 'جَدِّي' (Jaddii)?","Ayahku","Pamanku","Kakekku","Nenekku",2],
+            ["Bahasa Arab dari 'Pasar' adalah...","المكتبة","السوق","المطعم","المقصف",1],
+            ["'Saya pergi ke sekolah' = أَذْهَبُ إِلَى...","المستشفى","البيت","المدرسة","السوق",2],
+            ["Apa arti 'مِنْ' (Min)?","Ke","Dari","Di atas","Dan",1],
+            ["'Ini (lk)' dalam bahasa Arab adalah...","هذا","هذه","ذلك","تلك",0],
+            ["'Itu (pr)' dalam bahasa Arab adalah...","هذا","هذه","ذلك","تلك",3],
+            ["Apa bahasa Arab dari 'Hidung'?","عين","رأس","أنف","أذن",2],
+            ["Kata 'شُكْرًا' (Syukron) dijawab dengan...","أهلاً بك","عفوًا","مع السلامة","بخير",1]
+        ];
+        let curr = 0, userAns = new Array(50).fill(null), hpM = 100;
+        function loadQ(){
+            document.getElementById('q-num').innerText = `MUFRODAT ${curr+1} / 50`;
+            document.getElementById('q-text').innerText = db[curr][0];
+            const box = document.getElementById('options-box'); box.innerHTML = '';
+            for(let i=1;i<=4;i++){
+                let b = document.createElement('button'); b.className = 'opt-btn';
+                if(userAns[curr]===i-1) b.classList.add('selected');
+                b.innerText = String.fromCharCode(64+i)+". "+db[curr][i];
+                b.onclick = ()=>{ userAns[curr]=i-1; loadQ(); }; box.appendChild(b);
+            }
+        }
+        function prevSoal(){ if(curr>0){ curr--; loadQ(); } }
+        function serang(){
+            if(userAns[curr]===null){ alert("Pilih mufrodat (jawaban) yang tepat!"); return; }
+            if(userAns[curr]===db[curr][5]){ hpM=Math.max(0,hpM-2); document.getElementById('hp-monster').style.width=hpM+"%"; }
+            else { document.body.classList.add('shake'); setTimeout(()=>document.body.classList.remove('shake'),300); }
+            if(curr<49){ curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat(){
+            let s = 0; userAns.forEach((a,i)=>{ if(a===db[i][5]) s+=2; });
+            document.getElementById('m-score').innerText = s;
+            document.getElementById('m-desc').innerText = s>=75?"Mumtaz! Bahasa Arabmu sangat luar biasa!":"Jayyid! Masih ada kosa kata yang perlu dihafalkan lagi.";
+            document.getElementById('result-modal').style.display="flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asesmen: IPAS</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;900&display=swap');
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Nunito', sans-serif; background: #1b4332; color: white; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .battle-arena { background: linear-gradient(to bottom, #2d6a4f, #1b4332); padding: 15px; border-bottom: 4px solid #74b9ff; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .fighter { display: flex; flex-direction: column; align-items: center; width: 45%; }
+        .avatar { font-size: 35px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; border: 2px solid #fff; }
+        .hp-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 10px; margin-top: 5px; overflow: hidden; border: 1px solid #fff; }
+        .hp-bar { height: 100%; transition: width 0.3s; }
+        .player .hp-bar { background: #2ecc71; width: 100%; }
+        .monster .hp-bar { background: #e74c3c; width: 100%; }
+        .name { font-family: 'Fredoka One', cursive; font-size: 14px; margin-top: 5px; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+        .shake { animation: shake 0.3s; background: #4a0000 !important; }
+        .question-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: #f0fff0; color: #1b4332; }
+        .q-number { background: #2d6a4f; color: white; font-family: 'Fredoka One', cursive; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 14px; }
+        .q-text { font-size: 18px; font-weight: 900; line-height: 1.5; margin-bottom: 20px; }
+        .options { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .opt-btn { background: white; border: 2px solid #b7e4c7; border-radius: 12px; padding: 15px; text-align: left; font-size: 16px; font-weight: 700; color: #2d6a4f; transition: 0.1s; }
+        .opt-btn.selected { border-color: #2d6a4f; background: #d8f3dc; }
+        .nav-area { background: white; padding: 15px 15px calc(15px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; border-top: 2px solid #eee; }
+        .nav-btn { background: #6c757d; color: white; border: none; padding: 15px; border-radius: 10px; font-family: 'Fredoka One', cursive; width: 48%; }
+        .nav-btn.serang { background: #2d6a4f; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; border: 5px solid #2d6a4f; }
+    </style>
+</head>
+<body>
+    <div class="battle-arena">
+        <div class="fighter player">
+            <div class="avatar">🔬</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-player"></div></div>
+            <div class="name">Saintis Muda</div>
+        </div>
+        <div style="font-family:'Fredoka One'; color:#74b9ff;">VS</div>
+        <div class="fighter monster">
+            <div class="avatar">🦖</div>
+            <div class="hp-bar-bg"><div class="hp-bar" id="hp-monster"></div></div>
+            <div class="name">Monster Ketidaktahuan</div>
+        </div>
+    </div>
+    <div class="question-area" id="q-area">
+        <div class="q-number" id="q-num">RISET 1 / 50</div>
+        <div class="q-text" id="q-text">Memuat pertanyaan...</div>
+        <div class="options" id="options-box"></div>
+    </div>
+    <div class="nav-area">
+        <button class="nav-btn" onclick="prevSoal()">⬅️ MUNDUR</button>
+        <button class="nav-btn serang" onclick="serang()">JAWAB! 🌍</button>
+    </div>
+    <div class="modal" id="result-modal">
+        <div class="modal-content">
+            <h2 style="font-family:'Fredoka One'; color:#2d6a4f;">RISET SELESAI</h2>
+            <div style="font-size: 60px;">🥇</div>
+            <div style="font-size: 50px; font-weight: 900; color: #2ecc71;" id="m-score">0</div>
+            <p id="m-desc" style="font-weight:700;"></p>
+            <a href="menu_am.html" style="background:#2d6a4f; color:white; text-decoration:none; padding:15px; display:block; border-radius:10px; font-family:'Fredoka One'; margin-top:20px;">KEMBALI</a>
+        </div>
+    </div>
+    <script>
+        const db = [
+            ["Bagian tumbuhan yang berfungsi untuk menyerap air dan zat hara dari dalam tanah adalah...","Batang","Daun","Akar","Bunga",2],
+            ["Proses pembuatan makanan pada tumbuhan hijau dengan bantuan cahaya matahari disebut...","Respirasi","Fotosintesis","Oksidasi","Transpirasi",1],
+            ["Gas yang dihasilkan tumbuhan saat fotosintesis dan diperlukan manusia untuk bernapas adalah...","Karbon dioksida","Nitrogen","Oksigen","Hidrogen",2],
+            ["Hewan yang hanya memakan tumbuhan disebut...","Karnivora","Herbivora","Omnivora","Insektivora",1],
+            ["Alat pernapasan pada ikan adalah...","Paru-paru","Trakea","Kulit","Insang",3],
+            ["Perubahan wujud benda dari gas menjadi cair disebut...","Membeku","Mencair","Menguap","Mengembun",3],
+            ["Contoh perubahan wujud benda menyublim terjadi pada...","Es batu dipanaskan","Air direbus","Kapur barus dalam lemari","Lilin yang dibakar",2],
+            ["Gaya yang menyebabkan benda jatuh ke bawah menuju pusat bumi adalah gaya...","Magnet","Pegas","Gravitasi","Gesek",2],
+            ["Untuk memperkecil gaya gesek pada mesin motor, maka perlu diberikan...","Air","Pasir","Pelumas (oli)","Perekat",2],
+            ["Energi yang dihasilkan oleh aliran muatan listrik disebut energi...","Panas","Listrik","Bunyi","Kimia",1],
+            ["Alat yang mengubah energi gerak menjadi energi listrik pada pembangkit listrik adalah...","Turbin","Transformator","Generator / Dinamo","Kapasitor",2],
+            ["Benda yang dapat menghantarkan panas dengan baik disebut...","Isolator","Konduktor","Radiator","Semikonduktor",1],
+            ["Perpindahan panas melalui zat perantara tanpa disertai perpindahan partikel zatnya (misal pada sendok logam dalam air panas) disebut...","Konveksi","Konduksi","Radiasi","Evaporasi",1],
+            ["Panas matahari sampai ke bumi melalui cara...","Konduksi","Konveksi","Radiasi","Resonansi",2],
+            ["Bagian mata yang berfungsi mengatur jumlah cahaya yang masuk adalah...","Pupil","Retina","Lensa","Saraf mata",0],
+            ["Bunyi tidak dapat merambat melalui...","Zat padat","Zat cair","Udara","Ruang hampa udara",3],
+            ["Alat pernapasan manusia adalah...","Insang","Paru-paru","Trakea","Pundi-pundi udara",1],
+            ["Proses pencernaan makanan secara kimiawi pada manusia pertama kali terjadi di...","Kerongkongan","Lambung","Mulut","Usus halus",2],
+            ["Organ tubuh yang berfungsi memompa darah ke seluruh tubuh adalah...","Paru-paru","Hati","Ginjal","Jantung",3],
+            ["Pertemuan sel sperma dan sel telur pada manusia disebut...","Evolusi","Pembuahan (Fertilisasi)","Fragmentasi","Metamorfosis",1],
+            ["Tahap perkembangan manusia dimana terjadi kematangan organ reproduksi disebut masa...","Balita","Lansia","Pubertas","Kanak-kanak",2],
+            ["Metamorfosis sempurna terjadi pada hewan...","Kupu-kupu","Kecoa","Belalang","Kutu buku",0],
+            ["Cara hewan menyesuaikan diri dengan lingkungan disebut...","Habitat","Ekosistem","Adaptasi","Populasi",2],
+            ["Cecak memutuskan ekornya untuk mengelabui musuh. Cara ini disebut...","Mimikri","Autotomi","Kamuflase","Ekolokasi",1],
+            ["Bunglon mengubah warna kulitnya sesuai tempatnya berada disebut...","Autotomi","Mimikri","Ekolokasi","Hibernasi",1],
+            ["Hubungan timbal balik antara makhluk hidup dengan lingkungannya disebut...","Komunitas","Populasi","Ekosistem","Biosfer",2],
+            ["Dalam rantai makanan, tumbuhan berperan sebagai...","Konsumen I","Konsumen II","Produsen","Pengurai",2],
+            ["Hubungan antara lebah yang mengambil nektar dan membantu penyerbukan bunga disebut simbiosis...","Parasitisme","Komensalisme","Mutualisme","Amensalisme",2],
+            ["Benda langit yang memancarkan cahayanya sendiri disebut...","Planet","Satelit","Bintang","Asteroid",2],
+            ["Planet yang dikenal sebagai Planet Merah adalah...","Venus","Jupiter","Mars","Saturnus",2],
+            ["Pusat tata surya kita adalah...","Bumi","Matahari","Bulan","Galaksi",1],
+            ["Garis edar planet saat mengelilingi matahari disebut...","Rotasi","Revolusi","Orbit","Satelit",2],
+            ["Perputaran bumi pada porosnya mengakibatkan terjadinya...","Pergantian musim","Siang dan malam","Gerak semu tahunan matahari","Gerhana bulan",1],
+            ["Satu kali revolusi bumi mengelilingi matahari membutuhkan waktu...","24 jam","30 hari","365 1/4 hari","354 hari",2],
+            ["Gerhana bulan terjadi jika posisi...","Bulan di antara matahari dan bumi","Bumi di antara matahari dan bulan","Matahari di antara bumi dan bulan","Bumi di belakang matahari",1],
+            ["Tahun Kabisat terjadi setiap 4 tahun sekali. Pada tahun itu bulan Februari berjumlah...","28 hari","29 hari","30 hari","31 hari",1],
+            ["Sumber energi yang berasal dari sisa-sisa organisme purba adalah energi...","Matahari","Angin","Fosil (minyak bumi/batu bara)","Panas bumi",2],
+            ["Contoh energi terbarukan yang tidak akan habis adalah...","Batu bara","Minyak bumi","Gas alam","Cahaya matahari",3],
+            ["Pelestarian makhluk hidup di luar habitat aslinya (seperti kebun binatang) disebut pelestarian...","In situ","Ex situ","Habitat","Ekosistem",1],
+            ["Taman Nasional Ujung Kulon melindungi hewan langka yaitu...","Gajah","Badak bercula satu","Harimau","Orang utan",1],
+            ["Lensa cembung digunakan untuk membantu penderita penyakit mata...","Miopi (rabun jauh)","Hipermetropi (rabun dekat)","Presbiopi","Astigmatisme",1],
+            ["Rangkaian listrik yang jika satu lampu mati maka lampu lainnya ikut mati adalah rangkaian...","Paralel","Seri","Campuran","Terbuka",1],
+            ["Magnet memiliki dua kutub, yaitu...","Barat dan Timur","Atas dan Bawah","Utara dan Selatan","Positif dan Negatif",2],
+            ["Bagian darah yang berfungsi mengangkut oksigen ke seluruh tubuh adalah...","Sel darah putih","Keping darah","Plasma darah","Sel darah merah (Hemoglobin)",3],
+            ["Proses penguapan air laut ke atmosfer dalam siklus air disebut...","Kondensasi","Presipitasi","Evaporasi","Infiltrasi",2],
+            ["Planet terbesar di tata surya adalah...","Saturnus","Uranus","Jupiter","Neptunus",2],
+            ["Bunyi pantul yang terdengar kembali setelah bunyi asli selesai diucapkan disebut...","Gema","Gaung","Kerdam","Resonansi",0],
+            ["Kekuatan lensa kacamata diukur dalam satuan...","Watt","Dioptri","Ampere","Volt",1],
+            ["Gaya tarik menarik antara benda bermassa disebut gaya...","Listrik","Magnet","Gravitasi","Otot",2],
+            ["Alat untuk mengukur suhu adalah...","Barometer","Speedometer","Termometer","Anemometer",2]
+        ];
+        let curr = 0, userAns = new Array(50).fill(null), hpM = 100;
+        function loadQ(){
+            document.getElementById('q-num').innerText = `RISET ${curr+1} / 50`;
+            document.getElementById('q-text').innerText = db[curr][0];
+            const box = document.getElementById('options-box'); box.innerHTML = '';
+            for(let i=1;i<=4;i++){
+                let b = document.createElement('button'); b.className = 'opt-btn';
+                if(userAns[curr]===i-1) b.classList.add('selected');
+                b.innerText = String.fromCharCode(64+i)+". "+db[curr][i];
+                b.onclick = ()=>{ userAns[curr]=i-1; loadQ(); }; box.appendChild(b);
+            }
+        }
+        function prevSoal(){ if(curr>0){ curr--; loadQ(); } }
+        function serang(){
+            if(userAns[curr]===null){ alert("Masukkan data (jawaban) risetmu!"); return; }
+            if(userAns[curr]===db[curr][5]){ hpM=Math.max(0,hpM-2); document.getElementById('hp-monster').style.width=hpM+"%"; }
+            else { document.body.classList.add('shake'); setTimeout(()=>document.body.classList.remove('shake'),300); }
+            if(curr<49){ curr++; loadQ(); } else { tamat(); }
+        }
+        function tamat(){
+            let s = 0; userAns.forEach((a,i)=>{ if(a===db[i][5]) s+=2; });
+            document.getElementById('m-score').innerText = s;
+            document.getElementById('m-desc').innerText = s>=75?"Luar biasa! Kamu adalah saintis masa depan madrasah!":"Analisis masih ada yang keliru. Semangat belajar lagi!";
+            document.getElementById('result-modal').style.display="flex";
+        }
+        loadQ();
+    </script>
+</body>
+</html>
